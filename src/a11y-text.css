@@ -32,9 +32,14 @@
 }
 
 /* Keycap / controller glyph badges: letter >= 16px, badge grows to fit */
-.overlay kbd, .overlay .glyph, .overlay .glyph b, .overlay .glyph.text, .overlay .keycap,
+.overlay kbd:not(.glyph), .overlay .keycap,
 .notebook kbd, .intro kbd {
   font-size: max(var(--min-glyph), 1em) !important;
+}
+/* A badge has its own type size. Inheriting 1em from a large choice button
+   enlarges Y/N beyond the artwork even when the badge box itself still fits. */
+.overlay .glyph, .overlay .glyph b, .overlay .glyph.text {
+  font-size: var(--min-glyph) !important;
 }
 .overlay .glyph, .overlay kbd.glyph { min-width: calc(var(--min-glyph) * 1.6) !important; min-height: calc(var(--min-glyph) * 1.6) !important; }
 .overlay kbd.glyph.keyboard-wide { min-width: calc(var(--min-glyph) * 3.4) !important; padding: 0 .35em !important; }

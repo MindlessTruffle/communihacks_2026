@@ -99,6 +99,18 @@ the sibling `royal-concerns` folder. The gummy edition began on local branch
 
 ## Where to continue
 
+### Accessibility font inheritance in key badges
+
+- Fixed the readable-text rule that inherited the large choice-button font into
+  Y/N key badges. Badge letters now use their own 16px minimum, scaled by the
+  text-size setting; badge dimensions still grow for larger accessibility text.
+- Keep controller artwork at the full badge size instead of inheriting the
+  main choice icon's percentage sizing.
+- Strengthened the browser regression check to measure actual text-node bounds
+  using a DOM Range, verify no overlap with labels, and check normal/1.3× text.
+  The fixture reproduces the reported Explain / Too busy choices.
+
+
 ### Main-branch integration
 
 - Reconciled the separate game and original main histories. Retained the playable
