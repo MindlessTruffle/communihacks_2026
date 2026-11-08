@@ -67,7 +67,8 @@ export const LOOKS: Record<Preset, LookDef> = {
 };
 
 /** Sun + sky fill + image-based light + fog for a preset. Scene-specific point lights stay in the scene. */
-export function Lighting({ preset, shadow = { size: 14, far: 60 }, target = [0, 0, 0] as [number, number, number], follow, sun: sunOverride }: {
+export function Lighting({ preset, shadow = { size: 14, far: 60 }, target = [0, 0, 0] as [number, number, number], follow, sun: sunOverride, nightProgress }: {
+  nightProgress?: () => number;
   /** Replace the preset's key light (e.g. court: sun behind the windows so the wall casts window-shaped light). */
   sun?: { pos: [number, number, number]; color: string; intensity: number };
   preset: Preset; shadow?: { size: number; far: number; bottom?: number; top?: number }; target?: [number, number, number];
@@ -77,9 +78,21 @@ export function Lighting({ preset, shadow = { size: 14, far: 60 }, target = [0, 
   const L0 = LOOKS[preset];
   const L = sunOverride ? { ...L0, sun: sunOverride } : L0;
   const sun = useRef<THREE.DirectionalLight>(null!);
+  const hemi = useRef<THREE.HemisphereLight>(null!);
+  const fog = useRef<THREE.Fog>(null!);
+  const colors = useMemo(() => [L.sun.color, LOOKS.night.sun.color, L.hemi[0], LOOKS.night.hemi[0], L.hemi[1], LOOKS.night.hemi[1], L.fog[0], LOOKS.night.fog[0]].map(c => new THREE.Color(c)), [preset, sunOverride]);
   const tgt = useMemo(() => { const o = new THREE.Object3D(); o.position.set(...target); return o; }, [target[0], target[1], target[2]]); // eslint-disable-line react-hooks/exhaustive-deps
   const s = shadow.size;
   useFrame(() => {
+    if (nightProgress && sun.current && hemi.current && fog.current) {
+      const t = nightProgress();
+      sun.current.color.copy(colors[0]).lerp(colors[1], t);
+      sun.current.intensity = THREE.MathUtils.lerp(L.sun.intensity, LOOKS.night.sun.intensity, t);
+      hemi.current.color.copy(colors[2]).lerp(colors[3], t); hemi.current.groundColor.copy(colors[4]).lerp(colors[5], t);
+      hemi.current.intensity = THREE.MathUtils.lerp(L.hemi[2], LOOKS.night.hemi[2], t);
+      fog.current.color.copy(colors[6]).lerp(colors[7], t);
+      fog.current.near = THREE.MathUtils.lerp(L.fog[1], LOOKS.night.fog[1], t); fog.current.far = THREE.MathUtils.lerp(L.fog[2], LOOKS.night.fog[2], t);
+    }
     const p = follow?.();
     if (!p || !sun.current) return;
     // snap to texel-ish steps to avoid shadow shimmer while walking
@@ -104,8 +117,8 @@ export function Lighting({ preset, shadow = { size: 14, far: 60 }, target = [0, 
         shadow-camera-near={0.5} shadow-camera-far={shadow.far}
         shadow-bias={-0.0004} shadow-normalBias={0.03}
       />
-      <hemisphereLight args={L.hemi} />
-      <fog attach="fog" args={L.fog} />
+      <hemisphereLight ref={hemi} args={L.hemi} />
+      <fog ref={fog} attach="fog" args={L.fog} />
       <Environment resolution={64} frames={1} environmentIntensity={L.env.intensity}>
         <Lightformer form="rect" intensity={2.2} color={L.env.key} position={[-5, 6, 5]} scale={[10, 6, 1]} target={[0, 0, 0]} />
         <Lightformer form="rect" intensity={1.1} color={L.env.fill} position={[6, 4, -6]} scale={[10, 6, 1]} target={[0, 0, 0]} />

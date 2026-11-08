@@ -10,6 +10,8 @@ import { ADVISOR } from "../game/content/advisor.ts";
 import { speak, sfx, unlockAudio, playMusic, stopVoice } from "../audio/audio.ts";
 import { goNative } from "../platform/device.ts";
 import type { RunState } from "../game/types.ts";
+import { GummyPortrait } from "../characters/gummy/GummyPortrait.tsx";
+import { GummyColors, GUMMY_PALETTE } from './GummyColors.tsx';
 
 // --- Title screen: ivory serif title over a painted cloud bank + three snowy peaks, ONE START button, quintic camera descent to the court. ---
 let descending = false;
@@ -99,6 +101,8 @@ export function Setup() {
   const newGame = useGame((s) => s.newGame);
   const [title, setTitle] = useState<RunState["rulerTitle"]>("Ruler");
   const [model, setModel] = useState(RULER_MODELS[0].id);
+  const [color, setColor] = useState<string>(GUMMY_PALETTE[0][1]);
+  useEffect(() => { useGame.getState().setPreviewColor(color); useGame.getState().setPreviewRuler(model); }, [color, model]);
   const [step, setStep] = useState(0);
   const intro = ADVISOR.intro;
 
@@ -108,7 +112,7 @@ export function Setup() {
       <div className="center" onClick={() => {
         stopVoice(); sfx("page");
         if (i + 1 < intro.length) { setStep(step + 1); speak("advisor", intro[i + 1]); }
-        else newGame({ title, model, name: "" });
+        else newGame({ title, model, color, name: "" });
       }}>
         <div className="card panel">
           <div className="ribbon"><Ico name="owl" fallback="🦉" /> Sage Ollie</div>
@@ -121,17 +125,18 @@ export function Setup() {
 
   return (
     <div className="center" style={{ background: "transparent" }}>
-      <div className="card panel" style={{ width: "calc(var(--u)*62)", marginLeft: "calc(var(--u)*12)" }}>
-        <div className="ribbon">Who will rule?</div>
-        <div className="pick" role="radiogroup" aria-label="Choose your ruler" style={{ flexWrap: "nowrap", gap: "calc(var(--u)*.8)" }}>
+      <div className="card panel ruler-setup" style={{ width: "calc(var(--u)*62)" }}>
+        <h2 className="setup-title">Who will rule?</h2>
+        <div className="pick" role="radiogroup" aria-label="Choose your ruler" style={{ flexWrap: "wrap", gap: "calc(var(--u)*.8)" }}>
           {RULER_MODELS.map((m) => (
             <button key={m.id} className={"btn ghost opt " + (model === m.id ? "on" : "")} style={{ minWidth: "calc(var(--u)*7)", height: "calc(var(--u)*8.6)", padding: 0 }}
               aria-checked={model === m.id} aria-label={`Ruler ${m.label}`} role="radio" onClick={() => { sfx("tap"); setModel(m.id); useGame.getState().setPreviewRuler(m.id); }}>
-              <img src={`/ui/chars/${m.id}.png`} alt="" style={{ height: "100%", pointerEvents: "none" }} />
+              <GummyPortrait id={m.id} color={model === m.id ? color : undefined} />
             </button>
           ))}
         </div>
-        <p className="med display" style={{ marginTop: "calc(var(--u)*2.4)" }}>{UI.chooseTitle}</p>
+        <GummyColors color={color} onChange={setColor} />
+        <p className="med display" style={{ marginTop: "calc(var(--u)*1)" }}>{UI.chooseTitle}</p>
         <div className="pick" role="radiogroup">
           {(["King", "Queen", "Ruler"] as const).map((t) => (
             <button key={t} className={"btn opt " + (title === t ? "on" : "")} role="radio" aria-checked={title === t}

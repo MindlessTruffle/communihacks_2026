@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { create } from "zustand";
+import { Html } from "@react-three/drei";
 import { useGame } from "../game/store.ts";
 import { CHARACTERS } from "../game/content/characters.ts";
 import { AGENT_BY_CHAR } from "../game/content/talks.ts";
@@ -12,6 +13,7 @@ import { Character, Owl, Sky, Cloud } from "./common.tsx";
 import { Props, Prop, rng, setGlow, useSandTexture, usePainterly, type EnvName, type Inst } from "./env.tsx";
 import { Shaft, Halos } from "./fx.tsx";
 import { painterlyMaterial } from "./painterly.ts";
+import { DustPuffs } from "../characters/gummy/DustPuffs.ts";
 import { move, pollGamepadSticks, getDevice } from "../platform/device.ts";
 import { sfx } from "../audio/audio.ts";
 import { Grass, HIGH, Lighting, PostFX, scatter, useGroundTexture } from "./look.tsx";
@@ -31,10 +33,18 @@ export const DOORS = [
 ];
 
 /** Shared street state for the UI (proximity prompts). */
-export const useStreet = create<{ t: number; nearDoor: string | null; atGate: boolean; set(p: Partial<{ t: number; nearDoor: string | null; atGate: boolean }>): void }>((set) => ({
-  t: 0, nearDoor: null, atGate: false, set: (p) => set(p),
+type StreetProximity = { t: number; nearDoor: string | null; nearNpc: string | null; atGate: boolean };
+export const useStreet = create<StreetProximity & { set(p: Partial<StreetProximity>): void }>((set) => ({
+  t: 0, nearDoor: null, nearNpc: null, atGate: false, set: (p) => set(p),
 }));
 export const walkInput = { hold: false };
+
+export function interactWithCitizen() {
+  const state = useGame.getState(), npc = useStreet.getState().nearNpc;
+  if (!npc || state.phase !== "street" || state.convo || state.minigame || state.street.done.includes(npc)) return;
+  walkInput.hold = false;
+  state.openConvo({ npc, agent: npc === "advisor" ? "advisor_evening" : AGENT_BY_CHAR[npc] ?? npc, mode: npc === "advisor" ? "advisor" : "npc" });
+}
 
 function frameAt(t: number) {
   const p = CURVE.getPointAt(THREE.MathUtils.clamp(t, 0, 1));
@@ -305,15 +315,49 @@ function StreetCamera({ playerRef, convoTarget }: { playerRef: React.RefObject<T
 }
 
 function Npc({ charId, t, done, talking }: { charId: string; t: number; done: boolean; talking: boolean }) {
+  const root = useRef<THREE.Group>(null!);
+  const elapsed = useRef(0);
+  const materials = useRef(new Map<THREE.Mesh, { original: THREE.Material | THREE.Material[]; copies: THREE.Material[] }>());
+  const near = useStreet(s => s.nearNpc === charId);
+  const reduced = useGame(s => s.settings.reduceMotion);
+  useEffect(() => { elapsed.current = 0; }, [done]);
+  useEffect(() => () => {
+    for (const [mesh, { original, copies }] of materials.current) { mesh.material = original; copies.forEach(m => m.dispose()); }
+    materials.current.clear();
+  }, []);
+  useFrame((_, delta) => {
+    if (!root.current || !done) return;
+    elapsed.current += delta;
+    const progress = Math.min(1, elapsed.current / (reduced ? .45 : 2));
+    root.current.position.copy(p).addScaledVector(side, .4 + (reduced ? 0 : progress * 3));
+    root.current.rotation.y = Math.atan2(side.x, side.z);
+    root.current.visible = progress < 1;
+    const opacity = reduced ? 1 - progress : 1 - THREE.MathUtils.smoothstep(progress, .4, 1);
+    root.current.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      let entry = materials.current.get(object);
+      if (!entry) {
+        const original = object.material;
+        const copies = (Array.isArray(original) ? original : [original]).map(m => m.clone());
+        object.material = Array.isArray(original) ? copies : copies[0];
+        entry = { original, copies }; materials.current.set(object, entry);
+      }
+      entry.copies.forEach(m => { if (!m.transparent) { m.transparent = true; m.needsUpdate = true; } m.opacity = opacity; m.depthWrite = opacity > .95; });
+    });
+  });
   const ch = CHARACTERS[charId];
   const { p, tan, side } = frameAt(t);
-  const pos = p.clone().addScaledVector(side, done ? 2.6 : 0.4);
+  const pos = p.clone().addScaledVector(side, 0.4);
   const face = Math.atan2(-tan.x, -tan.z);
   if (import.meta.env.DEV && charId === "advisor") (window as unknown as { __owl?: unknown }).__owl = { pos: pos.toArray(), t, done };
   const wheel = ch.aid?.includes("wheelchair");
-  if (charId === "advisor") return <Owl position={[pos.x, 0, pos.z]} rotationY={face} scale={1.7} talking={talking} />;
-  return <Character url={ch.model} aid={ch.aid} position={[pos.x, 0, pos.z]} rotationY={face} scale={2 * (ch.scale ?? 1)}
-    anim={wheel ? "wheelchair-sit" : talking ? "interact-right" : done ? "idle" : "idle"} />;
+  return <group ref={root} position={[pos.x, 0, pos.z]} rotation={[0, done ? Math.atan2(side.x, side.z) : face, 0]} userData={{ citizen: charId }}>
+    {charId === "advisor" ? <Owl scale={1.7} talking={talking} /> : <Character url={ch.model} aid={ch.aid} scale={2 * (ch.scale ?? 1)}
+      anim={done ? wheel ? "wheelchair-move-forward" : "walk" : talking ? "interact-right" : "idle"} />}
+    {near && !done && !talking && <Html position={[0, charId === "advisor" ? 1.9 : 1.25, 0]} center zIndexRange={[30, 20]}>
+      <button className="citizen-prompt" onClick={interactWithCitizen} aria-label={`Talk to ${ch.name}`}><kbd>E</kbd> Talk · {ch.name}</button>
+    </Html>}
+  </group>;
 }
 
 export default function StreetScene() {
@@ -322,15 +366,21 @@ export default function StreetScene() {
   const convo = useGame((s) => s.convo);
   const minigame = useGame((s) => s.minigame);
   const phase = useGame((s) => s.phase);
-  const openConvo = useGame((s) => s.openConvo);
   const settings = useGame((s) => s.settings);
   const player = useRef<THREE.Group>(null!);
   const tRef = useRef(0);
   const lat = useRef(0);
   const [anim, setAnim] = useAnimState();
   const stepAcc = useRef(0);
+  const dust = useMemo(() => new DustPuffs(), []);
+  const direction = useMemo(() => new THREE.Vector3(), []);
+  const dustStep = useRef(0);
+  const night = useRef(0), furthest = useRef(0);
+  const nightProgress = () => night.current;
+  useEffect(() => () => dust.dispose(), [dust]);
+  useEffect(() => { dust.clear(); dustStep.current = 0; }, [run.day, dust]);
 
-  useEffect(() => { tRef.current = 0; useStreet.getState().set({ t: 0, nearDoor: null, atGate: false }); }, [run.day]);
+  useEffect(() => { tRef.current = 0; lat.current = 0; night.current = 0; furthest.current = 0; useStreet.getState().set({ t: 0, nearDoor: null, nearNpc: null, atGate: false }); }, [run.day]);
   useEffect(() => { setGlow(1.7); }, []);
 
   const npcs = street.npcs;
@@ -344,43 +394,60 @@ export default function StreetScene() {
     return p.clone().add(new THREE.Vector3(0, npcs[convoNpcIdx] === "advisor" ? 1.25 : 1.35, 0));
   }, [convoNpcIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useFrame((_, dt) => {
+  useFrame(({ camera }, rawDelta) => {
+    const dt = Math.min(rawDelta, .1);
     pollGamepadSticks();
     const frozen = !!convo || !!minigame || phase !== "street";
     const fwd = frozen ? 0 : Math.max(-1, Math.min(1, move.y + (walkInput.hold ? 1 : 0)));
     let t = tRef.current;
     if (fwd) t = THREE.MathUtils.clamp(t + (fwd * SPEED * dt) / LEN, 0, Math.min(1, blockT));
+    const previousLat = lat.current;
     lat.current = THREE.MathUtils.clamp(lat.current + (frozen ? 0 : move.x) * dt * 3, -1.6, 1.6);
-    const moving = Math.abs(t - tRef.current) > 1e-5;
+    const moving = Math.abs(t - tRef.current) > 1e-5 || Math.abs(lat.current - previousLat) > 1e-5;
     tRef.current = t;
+    furthest.current = Math.max(furthest.current, THREE.MathUtils.smoothstep(t, 0, .95));
+    night.current = THREE.MathUtils.damp(night.current, furthest.current, 3, dt);
+    if (t >= .985) night.current = 1;
     const { p, tan, side } = frameAt(t);
     const pl = player.current;
     if (pl) {
+      direction.copy(pl.position);
       pl.position.copy(p).addScaledVector(side, lat.current);
-      const yaw = Math.atan2(tan.x, tan.z) + (fwd < 0 ? Math.PI : 0);
-      pl.rotation.y = THREE.MathUtils.lerp(pl.rotation.y, yaw, Math.min(1, dt * 8));
+      direction.subVectors(pl.position, direction).normalize();
+      if (moving) {
+        const yaw = Math.atan2(direction.x, direction.z);
+        const turn = Math.atan2(Math.sin(yaw - pl.rotation.y), Math.cos(yaw - pl.rotation.y));
+        pl.rotation.y += turn * (1 - Math.exp(-10 * dt));
+      }
       pl.visible = !convo;
+    }
+    if (settings.reduceMotion || frozen) { dust.clear(); dustStep.current = 0; }
+    else {
+      if (moving && pl) {
+        dustStep.current += dt;
+        if (dustStep.current >= .38) { dustStep.current %= .38; dust.emit(pl.position, direction, () => .03); }
+      } else dustStep.current = 0;
+      dust.update(dt, camera.quaternion);
     }
     if (moving !== (anim === "walk")) setAnim(moving ? "walk" : "idle");
     if (moving) { stepAcc.current += dt; if (stepAcc.current > 0.32) { stepAcc.current = 0; sfx("step", { volume: 0.35, rate: 0.9 + Math.random() * 0.2 }); } }
 
-    // reached a blocking NPC → start the conversation
-    if (!frozen && nextBlock >= 0 && t >= blockT - 0.001) {
-      const npc = npcs[nextBlock];
-      const agent = npc === "advisor" ? "advisor_evening" : AGENT_BY_CHAR[npc] ?? npc;
-      openConvo({ npc, agent, mode: npc === "advisor" ? "advisor" : "npc" });
-    }
+    // Approach a citizen, then explicitly press E (or click their prompt).
+    const nearNpc = !frozen && nextBlock >= 0 && pl && (() => {
+      const f = frameAt(stopsFor[nextBlock]);
+      return pl.position.distanceTo(f.p.addScaledVector(f.side, .4)) <= 2.8;
+    })() ? npcs[nextBlock] : null;
     const near = DOORS.find((d) => Math.abs(d.t - t) < 0.035 && !street.games.includes(d.id))?.id ?? null;
     const st = useStreet.getState();
-    if (st.nearDoor !== near || st.atGate !== t >= 0.985 || Math.abs(st.t - t) > 0.01) st.set({ t, nearDoor: near, atGate: t >= 0.985 });
+    if (st.nearNpc !== nearNpc || st.nearDoor !== near || st.atGate !== t >= 0.985 || Math.abs(st.t - t) > 0.01) st.set({ t, nearDoor: near, nearNpc, atGate: t >= 0.985 });
   });
 
   const ruler = run.rulerModel;
   return (
     <>
       <StreetCamera playerRef={player} convoTarget={convoTarget} />
-      <Sky top="#8a82d4" bottom="#ffd2aa" />
-      <Lighting preset="sunset" shadow={{ size: 18, far: 90 }} target={[0, 0, 0]} follow={() => player.current?.position} />
+      <Sky top="#8a82d4" bottom="#ffd2aa" nightProgress={nightProgress} />
+      <Lighting preset="sunset" shadow={{ size: 18, far: 90 }} target={[0, 0, 0]} follow={() => player.current?.position} nightProgress={nightProgress} />
       <PostFX preset="sunset" />
       <Cloud position={[-20, 22, -40]} scale={3} />
       <Cloud position={[15, 26, -55]} scale={3.6} speed={0.08} />
@@ -389,9 +456,10 @@ export default function StreetScene() {
       <Road />
       <Scenery />
       <Gate />
-      {npcs.map((n, i) => <Npc key={n} charId={n} t={stopsFor[i]} done={street.done.includes(n)} talking={convo?.npc === n} />)}
+      <primitive object={dust.mesh} dispose={null} />
+      {npcs.map((n, i) => <Npc key={`${run.day}-${n}`} charId={n} t={stopsFor[i]} done={street.done.includes(n)} talking={convo?.npc === n} />)}
       <group ref={player}>
-        <Character url={`/kenney/mini-characters/${ruler}.glb`} anim={anim} scale={2} crown speed={settings.reduceMotion ? 0.8 : 1.1} />
+        <Character url={`/kenney/mini-characters/${ruler}.glb`} anim={anim} scale={2} crown locomotion speed={1} />
       </group>
     </>
   );

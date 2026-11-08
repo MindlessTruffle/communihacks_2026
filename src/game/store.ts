@@ -53,13 +53,14 @@ interface Store {
   fx: { id: number; kind: string; data?: unknown } | null;
   adminOpen: boolean;
   previewRuler: string | null;
+  previewColor: string | null;
 
   // actions
   setSettings(p: Partial<Settings>): void;
   resetSettings(): void;
   quitToTitle(): void;
   emit(kind: string, data?: unknown): void;
-  newGame(o: { title: RunState["rulerTitle"]; model: string; name: string }): void;
+  newGame(o: { title: RunState["rulerTitle"]; model: string; name: string; color?: string }): void;
   continueGame(): void;
   goto(p: Phase): void;
   beginDay(): void;
@@ -90,6 +91,7 @@ interface Store {
   finishReview(): void;
   admin(open: boolean): void;
   setPreviewRuler(id: string | null): void;
+  setPreviewColor(color: string | null): void;
   adminCmd(cmd: string, n?: number): void;
 }
 
@@ -151,6 +153,7 @@ export const useGame = create<Store>((set, get) => ({
   fx: null,
   adminOpen: false,
   previewRuler: null,
+  previewColor: null,
 
   setSettings(p) {
     const settings = { ...get().settings, ...p };
@@ -169,6 +172,7 @@ export const useGame = create<Store>((set, get) => ({
 
   newGame(o) {
     const run = sim.newRun({ title: o.title, model: o.model, name: o.name });
+    if (o.color && /^#[0-9a-f]{6}$/i.test(o.color)) run.rulerColor = o.color;
     set({ run, report: null });
     get().beginDay();
   },
@@ -299,6 +303,7 @@ export const useGame = create<Store>((set, get) => ({
 
   admin(open) { set({ adminOpen: open }); },
   setPreviewRuler(id) { set({ previewRuler: id }); },
+  setPreviewColor(color) { set({ previewColor: color && /^#[0-9a-f]{6}$/i.test(color) ? color : null }); },
   adminCmd(cmd, n = 0) {
     const run = get().run;
     if (!run) return;

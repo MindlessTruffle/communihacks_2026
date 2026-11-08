@@ -99,7 +99,7 @@ export function CourtUI() {
   const afterReply = useGame((s) => s.afterReply);
   const afterAdvisor = useGame((s) => s.afterAdvisor);
   const endCourt = useGame((s) => s.endCourt);
-  const anchor = useAnchors((s) => s.ruler);
+
   const [advisorLine, setAdvisorLine] = useState<{ text: string; real?: string; wise?: boolean } | null>(null);
   const greeted = useRef(0);
 
@@ -171,20 +171,13 @@ export function CourtUI() {
           who={card.who}
           text={step === "ask" ? card.ask : outcome!.line}
           onReplay={() => speak(card.who, step === "ask" ? card.ask : outcome!.line)}
-                    extra={step === "ask" && (card.cost || card.orItem) ? (
-            <div className="cost">
-              {card.cost ? <><span style={{ width: "1.3em", height: "1.3em", display: "inline-block" }}><CoinIcon /></span>{card.cost}</> : null}
-              {card.orItem && (run.items[card.orItem] ?? 0) > 0 ? <span> or <EmoIco e={ITEMS[card.orItem]?.icon} /> {ITEMS[card.orItem]?.name}</span> : null}
-            </div>
-          ) : undefined}
-        />
-      )}
-
-      {step === "ask" && card && (
-        <DecisionBubble anchor={anchor}>
+          extra={<>
+            {step === "ask" && card && (
+        <div className="chat-decisions">
           <div className="choice">
             <button className="btn yes" onClick={() => choose("yes")} disabled={!yes?.ok} aria-label={`Yes: ${card.yesLabel ?? "Yes"}`}><Ico name="check" fallback="✓" /><Hint k="yes" /></button>
             <div className="lbl">{card.yesLabel ?? "Yes"}</div>
+            <div className="choice-price"><CoinIcon /> {yes?.cost ?? card.cost ?? 0}</div>
             {yes && !yes.ok && <div className="need">Need {yes.cost} <Ico name="coin" fallback="🪙" /></div>}
             {yes?.pay === "credit" && <div className="need"><Ico name="card" fallback="💳" /> card</div>}
             {yes?.pay === "item" && <div className="lbl">use <EmoIco e={ITEMS[card.orItem!]?.icon} /></div>}
@@ -193,7 +186,11 @@ export function CourtUI() {
             <button className="btn no" onClick={() => choose("no")} disabled={!no?.ok} aria-label={`No: ${card.noLabel ?? "No"}`}><Ico name="cross" fallback="✗" /><Hint k="no" /></button>
             <div className="lbl">{card.noLabel ?? "No"}</div>
           </div>
-        </DecisionBubble>
+        </div>
+      )}
+
+</>}
+        />
       )}
 
       {step === "advisor" && outcome?.lesson && (

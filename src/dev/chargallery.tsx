@@ -9,7 +9,7 @@ const q = new URLSearchParams(location.search);
 const anim = q.get("anim") ?? "idle";
 const speed = Number(q.get("speed") ?? 1);
 const rulers = RULER_MODELS.map((r) => ({ id: r.id, model: `/models/chars/${r.id}.glb`, aid: undefined as string | undefined, scale: 1 }));
-const cast = Object.values(CHARACTERS).filter((c) => c.id !== "advisor").map((c) => ({ id: c.id, model: c.model, aid: c.aid, scale: c.scale ?? 1 }));
+const cast = Object.values(CHARACTERS).map((c) => ({ id: c.id, model: c.model, aid: c.aid, scale: c.scale ?? 1 }));
 const all = [...rulers, ...cast];
 const ids = q.get("ids")?.split(",");
 const list = ids ? all.filter((c) => ids.includes(c.id)) : all;

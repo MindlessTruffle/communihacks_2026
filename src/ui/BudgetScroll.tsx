@@ -6,7 +6,7 @@ import { ADVISOR } from "../game/content/advisor.ts";
 import { UI } from "../game/content/uiLines.ts";
 import { speak, sfx } from "../audio/audio.ts";
 import { FoodIco, Ico } from "./icons.tsx";
-import { haptic } from "../platform/device.ts";
+import { haptic, isTouch } from "../platform/device.ts";
 
 export const ITEM_EMOJI: Record<string, string> = {
   bread: "🍞", milk: "🥛", carrots: "🥕", cabbage: "🥬", apples: "🍎", eggs: "🥚", cheese: "🧀", medicine: "🧪", candles: "🕯️", fish: "🐟",
@@ -56,7 +56,7 @@ export function BudgetScroll() {
           ))}
         </div></div>
         <div className="footer">
-          <button className="btn gold" disabled={!market.list.length} onClick={() => { sfx("door"); haptic("medium"); speak(null, UI.marketHint); enter(); }}><Ico name="lantern" fallback="🏮" /> Enter the Night Market ▶</button>
+          <button className="btn gold" disabled={!market.list.length} onClick={() => { sfx("door"); haptic("medium"); enter(); if (!isTouch()) document.querySelector('canvas')?.requestPointerLock?.()?.catch(() => {}); }}><Ico name="lantern" fallback="🏮" /> Enter the Night Market ▶</button>
         </div>
       </div>
     </div>
