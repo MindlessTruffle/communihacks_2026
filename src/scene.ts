@@ -11,7 +11,7 @@ export function optimizeCourt(source: Object3D) {
     before++;
     // Architectural faces need hard normals: smooth imported normals bend light across
     // triangulated arch openings. Keep projected actor shadows on the floor only.
-    let architectural=false;for(let parent:Object3D|null=o;parent;parent=parent.parent){if(/court_wall/i.test(parent.name))architectural=true;}
+    let architectural=false;for(let parent:Object3D|null=o;parent;parent=parent.parent){if(/court_wall|Gameplay_Backdrop_Wall_Continuation/i.test(parent.name))architectural=true;}
     o.receiveShadow=!o.name.startsWith('Distant')&&!architectural;
     if(architectural){
       o.geometry=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();
@@ -20,7 +20,7 @@ export function optimizeCourt(source: Object3D) {
       // arch UV seams. Keep physical lighting but drop the faulty normal detail.
       const hardMaterial=(source:any)=>{const m=source.clone();m.normalMap=null;m.bumpMap=null;m.flatShading=false;m.roughness=.9;m.metalness=0;return m;};
       const positions=o.geometry.attributes.position,normals=o.geometry.attributes.normal,uv=o.geometry.attributes.uv;
-      if(uv)for(let i=0;i<positions.count;i++){if(Math.abs(normals.getX(i))>.05){const v=new Vector3().fromBufferAttribute(positions,i).applyMatrix4(o.matrixWorld);uv.setXY(i,-v.z/10,1-v.y/10);normals.setXYZ(i,Math.sign(normals.getX(i)),0,0);}}
+      if(uv)for(let i=0;i<positions.count;i++){if(Math.abs(normals.getX(i))>.05){const v=new Vector3().fromBufferAttribute(positions,i).applyMatrix4(o.matrixWorld);uv.setXY(i,-v.z/10,1-v.y/10);}if(Math.abs(normals.getY(i))<.7)normals.setXYZ(i,-1,0,0);}
       o.material=Array.isArray(o.material)?o.material.map(hardMaterial):hardMaterial(o.material);
     }
     o.castShadow=/Gummy|Throne|Crown|Royal_Stair/.test(o.name);
@@ -65,5 +65,7 @@ export function introCameraPose(end:PerspectiveCamera){
 export const DESCENT_MS=2000;
 export const REDUCED_MS=180;
 export function smoothProgress(t:number){const p=Math.max(0,Math.min(1,t));return p<.5?16*p*p*p*p*p:1-Math.pow(-2*p+2,5)/2;}
+
+
 
 
