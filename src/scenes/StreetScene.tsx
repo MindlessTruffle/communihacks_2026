@@ -50,14 +50,14 @@ export function interactWithCitizen() {
   state.openConvo({ npc, agent: npc === "advisor" ? "advisor_evening" : AGENT_BY_CHAR[npc] ?? npc, mode: npc === "advisor" ? "advisor" : "npc" });
 }
 
-function frameAt(t: number) {
+export function frameAt(t: number) {
   const p = CURVE.getPointAt(THREE.MathUtils.clamp(t, 0, 1));
   const tan = CURVE.getTangentAt(THREE.MathUtils.clamp(t, 0, 1)).normalize();
   const side = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
   return { p, tan, side };
 }
 
-function Road() {
+export function Road() {
   const geo = useMemo(() => {
     const segs = 160, w = 3.0;
     const pos: number[] = [], uv: number[] = [], idx: number[] = [];
@@ -86,7 +86,7 @@ function Road() {
 
 /** Polyline of the road for fast distance tests (grass placement). */
 const ROAD_PTS = CURVE.getSpacedPoints(240).map((v) => [v.x, v.z] as const);
-function roadDist(x: number, z: number) {
+export function roadDist(x: number, z: number) {
   let best = Infinity;
   for (const [px, pz] of ROAD_PTS) { const d = (px - x) ** 2 + (pz - z) ** 2; if (d < best) best = d; }
   return Math.sqrt(best);
@@ -179,7 +179,7 @@ let _street: ReturnType<typeof buildStreet> | null = null;
 const getStreet = () => (_street ??= buildStreet());
 
 /** Textured ground + lush wind grass in the verges (never on the road or under houses), soft layered hills in the haze. */
-function Meadow() {
+export function Meadow() {
   const { blocked } = getStreet();
   const ground = useGroundTexture("#8ccb4d", "#62ad3e", "#b8e26a", 20, 3);
   const groundMat = usePainterly({ map: ground, detail: "ground", scale: 0.07, roughness: 1 }, [ground]);
@@ -228,12 +228,14 @@ function useGlowTex() {
   }, []);
 }
 
-function Scenery() {
+/** `keep` (optional, multiplayer simulation only): drop individual props, e.g. canopy trees that would block a bird's-eye camera. */
+export function Scenery({ keep }: { keep?: (name: EnvName, it: Inst) => boolean } = {}) {
   const street = getStreet();
+  const lists = useMemo(() => (Object.keys(street.L) as EnvName[]).map((n) => [n, keep ? street.L[n]!.filter((it) => keep(n, it)) : street.L[n]!] as const), [street, keep]);
   const glow = useGlowTex();
   return (
     <>
-      {(Object.keys(street.L) as EnvName[]).map((n) => <Props key={n} name={n} items={street.L[n]!} cast={!NO_SHADOW.has(n)} />)}
+      {lists.map(([n, items]) => <Props key={n} name={n} items={items} cast={!NO_SHADOW.has(n)} />)}
       {street.doors.map((d) => (
         <group key={d.id} position={[d.x, 0, d.z]} rotation={[0, d.rot, 0]}>
           <mesh position={[0, 1.7, d.d / 2 + 0.55]}>
@@ -268,7 +270,7 @@ function Sign({ label, position }: { label: string; position: [number, number, n
   return <mesh position={position}><planeGeometry args={[1.2, 1.2]} /><meshBasicMaterial map={tex} transparent /></mesh>;
 }
 
-function Gate() {
+export function Gate() {
   const { p, tan } = frameAt(1);
   const rot = Math.atan2(tan.x, tan.z) + Math.PI; // gate front faces the approaching player
   const k = 1.35;
@@ -285,7 +287,7 @@ function Gate() {
 }
 
 /** Low golden-hour shafts slanting across the street (additive, noise-softened). */
-function SunShafts() {
+export function SunShafts() {
   const spots: [number, number, number][] = [[-16, 14, -10], [-14, 14, -30], [-12, 14, -48]];
   const dir: [number, number, number] = [0.9, -0.42, 0.28];
   return (

@@ -3,6 +3,7 @@ import { useGame } from "../game/store.ts";
 import { sfx, speak } from "../audio/audio.ts";
 import { getDevice } from "../platform/device.ts";
 import { UI } from "../game/content/uiLines.ts";
+import { useSim } from "../sim/simStore.ts";
 
 export { SettingsMenu, PauseMenu, ConfirmDialog } from "./Options.tsx";
 
@@ -32,13 +33,15 @@ export function AdminPanel() {
   const run = useGame((s) => s.run);
   const phase = useGame((s) => s.phase);
   if (!open) return null;
+  // Opens the multiplayer preview on top of the paused run (admin stays "open" underneath so Exit lands exactly where you were).
+  const SimButton = () => <button className="sim-launch" style={{ gridColumn: "1 / -1", background: "#e3d7ff" }} onClick={() => { sfx("tap"); useSim.getState().begin(); }}>▶ Multiplayer simulation</button>;
   const B = ({ c, n, children, danger }: { c: string; n?: number; children: React.ReactNode; danger?: boolean }) =>
     <button className={danger ? "danger" : ""} onClick={() => { sfx("tap"); cmd(c, n); }}>{children}</button>;
   return (
     <div className="admin panel" role="dialog" aria-label="Admin panel">
       <h2>🛠️ Admin</h2>
       <div className="small" style={{ marginBottom: 10 }}>phase: {phase} · day {run?.day} · 🪙{run?.gold} · 😊{run?.happiness} · 👥{run?.people}</div>
-      {!run ? <p>Start a reign first.</p> : (
+      {!run ? <><p>Start a reign first.</p><SimButton /></> : (
         <div className="grid">
           <B c="lose" danger>💀 Lose run now</B>
           <B c="gold" n={100}>+100 gold</B>
@@ -53,6 +56,7 @@ export function AdminPanel() {
           <B c="nextDay">→ Sleep / next day</B>
           <button onClick={() => { sfx("tap"); playWinDemo(); }}>▶ Budget-win cutscene</button>
           <button onClick={() => { sfx("tap"); admin(false); import("./Intro.tsx").then((m) => m.openIntro()); }}>▶ Replay tutorial</button>
+          <SimButton />
           <button onClick={() => admin(false)}>Close</button>
         </div>
       )}

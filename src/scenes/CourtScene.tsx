@@ -61,7 +61,7 @@ type ViewCam = THREE.PerspectiveCamera & { view: { offsetX: number; offsetY: num
  * Brick continuing past the authored wall slab (x -16..16, y 0..10) so square / tall / ultrawide frames never see sky
  * above or beside the wall. Same painterly brick material + planar UVs (x/4, y/4) so the bricks line up.
  */
-function WallExtension({ z }: { z: number }) {
+export function WallExtension({ z }: { z: number }) {
   const geo = useMemo(() => {
     const rects: [number, number, number, number][] = [[-80, 10, 80, 70], [-80, -1, -16, 10], [16, -1, 80, 10]]; // x0,y0,x1,y1
     const pos: number[] = [], uv: number[] = [], col: number[] = [], idx: number[] = [];
@@ -317,7 +317,7 @@ function CoinRain({ gold }: { gold: number }) {
 }
 
 /** Gold coin mound: grounded, coins face the camera, a few spilled, metallic with env reflections + sparkle glints. Tier by treasury. */
-function CoinPile({ gold }: { gold: number }) {
+export function CoinPile({ gold }: { gold: number }) {
   const name = tierOf(gold);
   const ref = useRef<THREE.Group>(null!);
   const prev = useRef(gold);
@@ -337,7 +337,7 @@ function CoinPile({ gold }: { gold: number }) {
   );
 }
 
-function Floor() {
+export function Floor() {
   // Big hand-painted tiles: warm tan fields with soft value gradients, painted top/left highlights, dark bottom/right edges, uneven painted grout, a few broad strokes.
   const tex = useMemo(() => {
     const c = document.createElement("canvas");

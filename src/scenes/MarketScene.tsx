@@ -24,11 +24,11 @@ export const useMarket = create<MarketView & { set(p: Partial<MarketView>): void
 export const joy = { x: 0, y: 0 };
 
 const BOUNDS = { x: 2.9, zMin: -21.3, zMax: 4 }; // zMin keeps you in front of the cashier counter
-const CASHIER = new THREE.Vector3(0, 0, -24.2);
+export const CASHIER = new THREE.Vector3(0, 0, -24.2);
 
 interface Slot { id: string; pos: THREE.Vector3; stall: number }
 
-function layout(): { stalls: { pos: [number, number, number]; rot: number; kind: string; trap: boolean }[]; slots: Slot[] } {
+export function layout(): { stalls: { pos: [number, number, number]; rot: number; kind: string; trap: boolean }[]; slots: Slot[] } {
   const needs = MARKET_ITEMS.filter((m) => m.kind !== "trap");
   const traps = MARKET_ITEMS.filter((m) => m.kind === "trap");
   const stalls: { pos: [number, number, number]; rot: number; kind: string; trap: boolean }[] = [];
@@ -49,7 +49,7 @@ function layout(): { stalls: { pos: [number, number, number]; rot: number; kind:
   return { stalls, slots };
 }
 
-function PriceTag({ text, position, hot }: { text: string; position: THREE.Vector3; hot?: boolean }) {
+export function PriceTag({ text, position, hot }: { text: string; position: THREE.Vector3; hot?: boolean }) {
   const tex = useMemo(() => {
     const c = document.createElement("canvas"); c.width = 256; c.height = 128;
     const g = c.getContext("2d")!;
@@ -64,7 +64,7 @@ function PriceTag({ text, position, hot }: { text: string; position: THREE.Vecto
   return <mesh ref={ref} position={position}><planeGeometry args={[0.5, 0.25]} /><meshBasicMaterial map={tex} transparent /></mesh>;
 }
 
-function ShopItem({ slot, onPick }: { slot: Slot; onPick: (id: string, dist: number) => void }) {
+export function ShopItem({ slot, onPick }: { slot: Slot; onPick: (id: string, dist: number) => void }) {
   const m = MARKET_BY_ID[slot.id];
   const ref = useRef<THREE.Group>(null!);
   const trap = m.kind === "trap";
@@ -126,7 +126,7 @@ function Basket() {
 }
 
 /** Rounded cobblestones on mortar (canvas). */
-function useCobbleTexture() {
+export function useCobbleTexture() {
   return useMemo(() => {
     const c = document.createElement("canvas"); c.width = c.height = 256;
     const g = c.getContext("2d")!;
@@ -148,7 +148,7 @@ function useCobbleTexture() {
 }
 
 /** Twinkle-free star field on a big sphere shell (fog-immune). */
-function Stars() {
+export function Stars() {
   const geo = useMemo(() => {
     const n = 500, p: number[] = [];
     let s = 5;
@@ -162,7 +162,7 @@ function Stars() {
   return <points geometry={geo}><pointsMaterial color={[2, 2, 2.4]} size={1.3} sizeAttenuation={false} fog={false} toneMapped={false} /></points>;
 }
 
-function StringLights({ z }: { z: number }) {
+export function StringLights({ z }: { z: number }) {
   const bulbs = useMemo(() => Array.from({ length: 9 }, (_, i) => {
     const x = -4.4 + i * 1.1;
     return [x, 4.2 - Math.cos(((i - 4) / 4) * 1.2) * 0.6 + 0.6, z] as [number, number, number];
@@ -285,10 +285,10 @@ function FirstPerson({ onMoveTick }: { onMoveTick: (pos: THREE.Vector3) => void 
   return null;
 }
 
-const FOUNTAIN = { x: 0, z: -12, r: 1.5, scale: 0.7 };
+export const FOUNTAIN = { x: 0, z: -12, r: 1.5, scale: 0.7 };
 
 /** Static dressing for the plaza: houses around the edge, hedges/trees as a night backdrop, lamp posts, crates. Built once. */
-function buildMarket(stalls: ReturnType<typeof layout>["stalls"]) {
+export function buildMarket(stalls: ReturnType<typeof layout>["stalls"]) {
   const L: Partial<Record<EnvName, Inst[]>> = {};
   const put = (n: EnvName, x: number, z: number, r = 0, s = 1) => { (L[n] ??= []).push({ p: [x, 0, z], r, s }); };
   const r = rng(21);
@@ -323,7 +323,7 @@ function buildMarket(stalls: ReturnType<typeof layout>["stalls"]) {
 }
 
 /** Low moon + soft halo (HDR so it blooms), fog-immune. */
-function Moon() {
+export function Moon() {
   const halo = useMemo(() => {
     const c = document.createElement("canvas"); c.width = c.height = 128;
     const g = c.getContext("2d")!;

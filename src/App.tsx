@@ -19,6 +19,10 @@ import { Vfx2D } from "./fx/Vfx2D.tsx";
 import { Intro, useIntroGate } from "./ui/Intro.tsx";
 import { NotebookButton, Notebook } from './ui/Notebook.tsx';
 import { rememberRun, useNotebook } from './game/notebook.ts';
+import { useSim } from "./sim/simStore.ts";
+
+// Multiplayer simulation (admin panel -> "Multiplayer simulation"): loaded on demand.
+const MultiplayerSim = lazy(() => import("./sim/MultiplayerSim.tsx"));
 
 // Heavy / rarely-needed pieces are split out: the ElevenLabs SDK only loads when a conversation opens.
 const Conversation = lazy(() => import("./convai/Conversation.tsx").then((m) => ({ default: m.Conversation })));
@@ -82,6 +86,7 @@ export default function App() {
   const phase = useGame((s) => s.phase);
   const settings = useGame((s) => s.settings);
   const notebookOpen = useNotebook(s => s.open);
+  const simOpen = useSim((s) => s.open); // while true the real run is frozen: its canvas is paused and its UI is hidden
   useEffect(() => { const saved = loadSave(); if (saved?.run) rememberRun(saved.run); }, []);
   const run = useGame(s => s.run);
   useEffect(() => { if (run) rememberRun(run); }, [run]);
@@ -159,9 +164,10 @@ export default function App() {
   const showGear = inGame && !convo && phase !== "reign-review";
   const showHud = showGear && !minigame;
   return (
-    <div className="app">
+    <div className={"app" + (simOpen ? " sim-on" : "")}>
       <div className="canvas-wrap" aria-hidden="true">
         <Canvas
+          frameloop={simOpen ? "never" : "always"}
           shadows
           dpr={getDevice().form === "phone" ? [1, 1.25] : HIGH ? [1, 1.75] : [1, 1.5]}
           gl={{ antialias: !HIGH, stencil: false, powerPreference: "high-performance", toneMapping: RENDERER_TONEMAPPING, toneMappingExposure: 1.05 }}
@@ -206,6 +212,7 @@ export default function App() {
           <AdminPanel />
         </Suspense>
       </main>
+      {simOpen && <Suspense fallback={null}><MultiplayerSim /></Suspense>}
       <div className="veil" key={phase} aria-hidden="true" />
       <div className="curtain" key={"c" + sk} aria-hidden="true" />
       <LiveRegion />

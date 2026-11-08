@@ -107,6 +107,9 @@ async function musicAvailable(): Promise<string[]> {
   return musicIndex!;
 }
 
+/** Name of the music loop currently requested (so the multiplayer simulation can hand it back on exit). */
+export const currentMusic = () => musicName;
+
 export async function playMusic(name: string) {
   if (name === musicName) return;
   musicName = name;
