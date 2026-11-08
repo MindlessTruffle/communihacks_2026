@@ -107,9 +107,11 @@ const PAD: Record<HintKey, { img: string; t?: string }> = {
 };
 /** A key / pad glyph for the current input device. Touch shows nothing. Missing attribute -> plain text fallback. */
 export function Hint({ k, force }: { k: HintKey; force?: InputKind }) {
-  const dev = force ?? useInput();
+  const input = useInput();
+  const dev = force ?? input;
   if (dev === "touch") return null;
   if (dev === "gamepad") { const p = PAD[k]; return <span className={"glyph pad"} aria-hidden><Ico name={p.img} fallback={p.t ?? k} />{p.t && <b>{p.t}</b>}</span>; }
+  if (k === 'yes' || k === 'no') return <span className="glyph key decision-key" aria-hidden><Ico name="keysmall" fallback="" /><b>{KEY_TEXT[k]}</b></span>;
   if (dev === "mouse" && k === "move")
     return <span className="glyph-group" aria-hidden>{["W", "A", "S", "D"].map((c) => <span key={c} className="glyph key"><Ico name="key" fallback="" /><b>{c}</b></span>)}</span>;
   if (dev === "mouse") {

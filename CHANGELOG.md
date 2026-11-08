@@ -99,6 +99,17 @@ the sibling `royal-concerns` folder. The gummy edition began on local branch
 
 ## Where to continue
 
+### Project key badges for Yes/No choices
+
+- Use the existing `public/ui/icons/keysmall.png` artwork for Y/N badges,
+  including before input-device detection finishes. Keep X/B controller artwork
+  and hide keyboard hints for touch input.
+- Give badges square, independent sizing so button-image rules cannot squeeze
+  them. Keep the main check/cross centred in the current decision bubble.
+- Browser checks passed at both PC sizes, including image loading, label fit,
+  controller/touch states, and actual Y/N actions. Six tests and build passed.
+
+
 ### Market keycap fix and character-source handoff
 
 - Replaced the stretched wide-key image with a text-centred Space/Enter keycap,
