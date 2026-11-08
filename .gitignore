@@ -6,3 +6,6 @@ dist/
 *.blend1
 *.blend2
 .DS_Store
+public/assets/cloud-bank.png
+public/fonts/LilitaOne-Regular.ttf
+public/fonts/OFL.txt
