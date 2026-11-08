@@ -72,9 +72,9 @@ export function Morning() {
         </div>
         {lines.length > 1 && <div className="med display">Total: <span className={total >= 0 ? "pos" : "neg"}>{total >= 0 ? "+" : ""}{total}</span> <Ico name="coin" fallback="🪙" /></div>}
         {run.day % 7 >= 4 && <p className="small" style={{ fontWeight: 700 }}><Ico name="crown" fallback="🏰" /> {run.day % 7 === 6 ? ADVISOR.upkeepTomorrow : ADVISOR.upkeepSoon}</p>}
-        <div className="footer">
-          {hasTreasury && <button className="btn purple" onClick={() => { sfx("door"); setTreasury(true); }}><Ico name="vault" fallback="🏦" /> Treasury</button>}
-          <button className="btn gold" autoFocus onClick={() => { sfx("click"); stopVoice(); close(); }}>Open the court ▶</button>
+        <div className="footer stack">
+          <button className="btn gold hero" autoFocus onClick={() => { sfx("click"); stopVoice(); close(); }}><Ico name="crown" fallback="👑" /> Open the court <span className="go">▶</span></button>
+          {hasTreasury && <button className="btn ghost sm" onClick={() => { sfx("door"); setTreasury(true); }}><Ico name="vault" fallback="🏦" /> Treasury</button>}
         </div>
       </div>
     </div>

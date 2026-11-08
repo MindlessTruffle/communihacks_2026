@@ -34,6 +34,11 @@ const SFX: Record<string, string[]> = {
   scribble: [1, 3, 5].map((i) => `${K}/interface-sounds/scratch_00${i}.ogg`),
   boing: [`${K}/interface-sounds/pluck_002.ogg`],
   tick: [`${K}/interface-sounds/select_001.ogg`],
+  // scroll tutorial (Intro.tsx)
+  scrollOpen: [`${K}/rpg-audio/clothBelt.ogg`],
+  scrollWind: [`${K}/rpg-audio/cloth2.ogg`],
+  scrollClose: [`${K}/rpg-audio/clothBelt2.ogg`],
+  woodThunk: [`${K}/rpg-audio/bookPlace2.ogg`],
 };
 
 const cache = new Map<string, Howl>();

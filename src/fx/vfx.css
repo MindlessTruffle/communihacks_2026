@@ -1,5 +1,7 @@
 /* VFX layer styles: overlay canvas, button squash/pop, HUD stat pops. Owned by src/fx. Reduce motion = no scale/translate, glow only. */
 .vfx2d { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: var(--z-toast, 60); }
+/* Cutscene overlays (z 70) own the screen: lift the effects layer above them while one is mounted (or add class vfx-top to <body>). */
+body:has(.bw) .vfx2d, body.vfx-top .vfx2d { z-index: 80; }
 
 /* ---- press squash + overshoot pop on release (springy cubic-bezier on the way back) ---- */
 .btn, .corner-btn {

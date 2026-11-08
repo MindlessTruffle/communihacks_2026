@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from "react";
-import { useFrame } from "@react-three/fiber";
+import { createPortal, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { useGame } from "../game/store.ts";
@@ -154,7 +154,7 @@ const ease = (x: number) => { x = Math.min(1, Math.max(0, x)); return x * x * (3
 /** 0→1 ramp-in, hold, ramp-out envelope over u in [0,1]. */
 const env = (u: number, a = 0.15, b = 0.2) => ease(u / a) * ease((1 - u) / b);
 
-interface Ctx { cane: boolean; wheel: boolean; ghost: boolean; ph: number; rm: number; }
+interface Ctx { cane: boolean; wheel: boolean; ghost: boolean; ph: number; rm: number; carry: boolean; }
 
 /** Target pose for an animation at local time t (seconds, speed-scaled). `done` = one-shot already finished. */
 function targetPose(name: string, t: number, done: boolean, c: Ctx, out: Pose): Pose {
@@ -231,6 +231,10 @@ function targetPose(name: string, t: number, done: boolean, c: Ctx, out: Pose): 
     P.ty = Math.sin(I * 0.8) * 0.04 * k; P.hy = Math.sin(I * 0.55) * 0.12 * k;
     P.alx = Math.sin(I * 1.9) * 0.035 * k; P.arx = -P.alx;
   }
+  if (c.carry && !seated) { // right arm holds a carried object out in front at hip height; the left arm still swings
+    P.arx = -0.95 + (name === "walk" ? Math.sin(t * 20) * 0.03 * k : 0); P.arz = 0.18;
+    if (name === "walk") P.ty *= 0.6;
+  }
   if (c.cane && !seated) { // right hand holds the cane out front
     P.arx = -0.68 + (name === "walk" ? Math.sin(t * 10) * 0.08 * k : 0); P.arz = -0.16;
     if (name === "walk") { P.llx *= 0.6; P.lrx *= 0.6; P.slx *= 0.7; P.srx *= 0.7; P.by *= 0.7; }
@@ -251,8 +255,10 @@ function Aid({ url, kind, spin }: { url: string; kind: "wheelchair" | "cane"; sp
 export function Character(props: {
   url: string; anim?: string; position?: Vec3; rotationY?: number; scale?: number; aid?: string; crown?: boolean; speed?: number;
   children?: ReactNode; onOneShotEnd?: () => void;
+  /** Right arm held forward for carrying something; `handChildren` are parented to the right hand part (hand_r) so they follow the arm. */
+  carry?: boolean; handChildren?: ReactNode;
 }) {
-  const { anim = "idle", position, rotationY = 0, scale = 1, crown, speed = 1, children, onOneShotEnd } = props;
+  const { anim = "idle", position, rotationY = 0, scale = 1, crown, speed = 1, children, onOneShotEnd, carry = false, handChildren } = props;
   let { url, aid } = props;
   // DEV only: ?forceVisitor=maya swaps every non-ruler character for that cast member (to screenshot e.g. the wheelchair visitor in the court)
   if (import.meta.env.DEV && !crown) {
@@ -264,6 +270,7 @@ export function Character(props: {
   const crownGltf = useGLTF("/models/crown.glb");
   const crownObj = useMemo(() => prepChar(crownGltf.scene.clone(true), "crown"), [crownGltf.scene]);
   const rig = useRef<THREE.Group>(null!);
+  const handR = useMemo(() => scene.getObjectByName("hand_r") ?? null, [scene]);
   const aidInfo = aid ? resolveAidUrl(aid) : null;
   const parts = useMemo(() => {
     const g = (n: string) => scene.getObjectByName(n) ?? null;
@@ -294,7 +301,7 @@ export function Character(props: {
     s.anim = anim; s.t = 0; s.done = false; s.fired = false;
   }, [anim]);
 
-  const ctx = useMemo<Ctx>(() => ({ cane: aidInfo?.kind === "cane", wheel: aidInfo?.kind === "wheelchair", ghost: parts.ghost, ph: 0, rm: 1 }), [aidInfo?.kind, parts.ghost]);
+  const ctx = useMemo<Ctx>(() => ({ cane: aidInfo?.kind === "cane", wheel: aidInfo?.kind === "wheelchair", ghost: parts.ghost, ph: 0, rm: 1, carry }), [aidInfo?.kind, parts.ghost, carry]);
 
   useFrame((_, dtRaw) => {
     const s = st.current;
@@ -343,6 +350,7 @@ export function Character(props: {
         <group ref={rig}><primitive object={scene} /></group>
         {aidInfo && <Aid url={aidInfo.url} kind={aidInfo.kind} spin={spinRef} />}
       </group>
+      {handR && handChildren ? createPortal(handChildren, handR) : null}
       {children}
     </group>
   );

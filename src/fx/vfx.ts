@@ -13,6 +13,8 @@ export interface VfxOpts {
   n?: number;
   /** size multiplier. 3D: world scale (1 = person-sized scene, ~4 in the court). 2D: ignored. */
   scale?: number;
+  /** 3D only: particle size multiplier on top of `scale` (bigger bits without flying further). */
+  size?: number;
   /** spawn spread radius (3D world units / 2D px) */
   spread?: number;
 }

@@ -10,10 +10,58 @@ import { haptic } from "../platform/device.ts";
 import { useAnchors } from "../scenes/anchors.ts";
 import { CoinIcon, Continue, EmoIco, Hint, Ico } from "./icons.tsx";
 
+/** Everything that must never be covered by the decision bubble (measured live, so it works at any size / text size). */
+const OBSTACLES = ".phase-dots, .corner-btn, .stats, .speech, .advisor-tip, .hint-pill, .captions, .wallet, .list-pin";
+type R = { l: number; t: number; r: number; b: number };
+const ix = (a: R, b: R) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
+/** Approximate screen-% position of the visitor's head (they stand in the same spot at every aspect ratio: ~83% x, ~55% y).
+ * There is no visitor anchor in useAnchors and the scene files are off limits, so this is a fixed estimate, not a projection. */
+const VISITOR: [number, number] = [83, 58];
+/** The court scene is fitted to the viewport roughly like a 1.6:1 frame, so character sizes follow S = min(W/1.6, H) (not W or H alone). */
+const sceneS = (W: number, H: number) => Math.min(W / 1.6, H);
+const headSize = (W: number, H: number) => Math.max(22, sceneS(W, H) * 0.065);
+
+/** Rects (px) the UI must keep clear: the king (head + throne body), the owl (head + body) and the visitor (head + body). */
+function scenePeople(W: number, H: number): { king: R; owl?: R; visitor: R } {
+  const S = sceneS(W, H), hs = headSize(W, H);
+  const k = useAnchors.getState().ruler; const kx = (k[0] / 100) * W, ky = (k[1] / 100) * H;
+  const king = { l: kx - S * 0.14, t: ky - hs, r: kx + S * 0.14, b: ky + S * 0.27 };
+  const o = (useAnchors.getState() as unknown as { owl?: [number, number] }).owl;
+  const owl = o ? { l: (o[0] / 100) * W - S * 0.07, t: (o[1] / 100) * H - hs, r: (o[0] / 100) * W + S * 0.07, b: (o[1] / 100) * H + S * 0.14 } : undefined;
+  const vx = (VISITOR[0] / 100) * W, vy = (VISITOR[1] / 100) * H;
+  return { king, owl, visitor: { l: vx - S * 0.07, t: vy - hs, r: vx + S * 0.07, b: vy + S * 0.2 } };
+}
+
+/** Keeps a panel clear of the owl and the visitor by narrowing it from the left (it is anchored top-right). Re-runs on any resize / layout change. */
+function useAvoidScene(ref: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    let raf = 0, sig0 = "";
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const el = ref.current; if (!el) return;
+      const W = innerWidth, H = innerHeight;
+      const sig = [W, H, el.scrollHeight, document.documentElement.style.getPropertyValue("--ud"), el.textContent?.length].join("/");
+      if (sig === sig0) return; sig0 = sig;
+      el.style.maxWidth = "";
+      const r = el.getBoundingClientRect();
+      const p = scenePeople(W, H);
+      let maxW = Infinity;
+      for (const o of [p.owl, p.visitor]) {
+        if (o && r.bottom > o.t && r.top < o.b && o.r > r.left && o.l < r.right) maxW = Math.min(maxW, r.right - o.r - 8);
+      }
+      if (maxW !== Infinity) el.style.maxWidth = Math.max(maxW, Math.min(260, W * 0.3)) + "px";
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [ref]);
+}
+
 export function SpeechPanel({ who, text, extra, onReplay, tag }: { who: string; text: string; extra?: React.ReactNode; onReplay?: () => void; tag?: string }) {
   const ch = CHARACTERS[who];
+  const ref = useRef<HTMLDivElement>(null);
+  useAvoidScene(ref);
   return (
-    <div className="speech panel bounce" key={who + text} role="dialog" aria-live="polite" aria-label={`${ch?.name}: ${text}`}>
+    <div ref={ref} className="speech panel bounce" key={who + text} role="dialog" aria-live="polite" aria-label={`${ch?.name}: ${text}`}>
       {onReplay && <button className="replay" onClick={onReplay} aria-label="Hear it again"><Ico name="speaker" fallback="🔊" /></button>}
       <div className="name" style={{ color: ch?.color }}>{ch?.name}</div>
       <div className="text">{text}</div>
@@ -23,56 +71,60 @@ export function SpeechPanel({ who, text, extra, onReplay, tag }: { who: string; 
   );
 }
 
-/** Everything that must never be covered by the decision bubble (measured live, so it works at any bracket / text size). */
-const OBSTACLES = ".phase-dots, .corner-btn, .stats, .speech, .advisor-tip, .hint-pill, .captions, .wallet, .list-pin";
-type R = { l: number; t: number; r: number; b: number };
-const ix = (a: R, b: R) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
-
-/** Compact thought bubble beside the ruler's head. Re-projected every frame; clamped to the viewport and pushed clear of all HUD rects. */
+/** Compact decision card near the king. Re-measured every frame and on every rc-device / resize (zoom, rotate, DPR): picks the closest spot that
+ * is inside the viewport and covers none of the HUD, the king, the owl or the visitor. If no clear spot exists at full size it switches to
+ * the icon-only compact form (labels stay as aria-label / tooltip) and searches again. */
 export function DecisionBubble({ anchor, children }: { anchor: [number, number]; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const anchorRef = useRef(anchor); anchorRef.current = anchor;
   useEffect(() => {
     let raf = 0; let last = ""; let sig0 = "";
+    const force = () => { sig0 = ""; };
+    window.addEventListener("rc-device", force); window.addEventListener("resize", force);
     const tick = () => {
       raf = requestAnimationFrame(tick);
       const el = ref.current; if (!el) return;
       const W = window.innerWidth, H = window.innerHeight, pad = 8;
-      const w = el.offsetWidth, h = el.offsetHeight;
       const ax = (anchorRef.current[0] / 100) * W, ay = (anchorRef.current[1] / 100) * H;
-      // owl head anchor (useAnchors "owl", added by the scene code): another uncoverable rect; bubble goes to the side away from it
-      const owlA = (useAnchors.getState() as unknown as { owl?: [number, number] }).owl;
-      const ox = owlA ? (owlA[0] / 100) * W : -1, oy = owlA ? (owlA[1] / 100) * H : -1;
-      const gap = Math.max(10, W * 0.012);
-      const obs: R[] = [];
+      const hud: R[] = [];
       document.querySelectorAll(OBSTACLES).forEach((o) => {
         const rc = o.getBoundingClientRect(); const cs = getComputedStyle(o);
-        if (rc.width > 2 && rc.height > 2 && cs.visibility !== "hidden" && cs.display !== "none") obs.push({ l: rc.left - 6, t: rc.top - 6, r: rc.right + 6, b: rc.bottom + 6 });
+        if (rc.width > 2 && rc.height > 2 && cs.visibility !== "hidden" && cs.display !== "none") hud.push({ l: rc.left - 6, t: rc.top - 6, r: rc.right + 6, b: rc.bottom + 6 });
       });
-      const sig = [W, H, w, h, Math.round(ax), Math.round(ay), Math.round(ox), Math.round(oy), obs.map((o) => [o.l, o.t, o.r, o.b].map(Math.round).join(".")).join("|")].join("/");
+      const owlA = (useAnchors.getState() as unknown as { owl?: [number, number] }).owl;
+      const sig = [W, H, Math.round(ax), Math.round(ay), Math.round((owlA?.[0] ?? 0) * 10), el.textContent?.length, document.documentElement.style.getPropertyValue("--ud"),
+        hud.map((o) => [o.l, o.t, o.r, o.b].map(Math.round).join(".")).join("|")].join("/");
       if (sig === sig0) return; sig0 = sig;
-      const hs = Math.max(36, W * 0.035); // keep the head itself uncovered
-      obs.push({ l: ax - hs, t: ay - hs, r: ax + hs, b: ay + hs });
-      if (owlA) obs.push({ l: ox - hs, t: oy - hs, r: ox + hs, b: oy + hs });
-      // preferred spot: beside the ruler's head, on the side away from the owl (default: right)
-      const side = owlA && ox >= ax ? -1 : 1;
-      const px = side > 0 ? ax + hs + gap * 0.3 : ax - hs - gap * 0.3 - w, py = ay - h * 0.8;
-      let best = { x: px, y: py, s: Infinity };
-      const maxX = Math.max(pad, W - w - pad), maxY = Math.max(pad, H - h - pad);
-      const step = 12;
-      for (let y = pad; y <= maxY; y += step) for (let x = pad; x <= maxX; x += step) {
-        const r: R = { l: x, t: y, r: x + w, b: y + h };
-        let ov = 0; for (const o of obs) ov += ix(r, o);
-        const d = Math.hypot(x - px, y - py);
-        const sc = ov * 1000 + d;
-        if (sc < best.s) best = { x, y, s: sc };
+      const p = scenePeople(W, H);
+      const obs = [...hud, p.king, p.visitor, ...(p.owl ? [p.owl] : [])];
+      const gap = Math.max(10, W * 0.012);
+      const side = owlA && (owlA[0] / 100) * W >= ax ? -1 : 1;
+      const search = (compact: boolean) => {
+        el.dataset.compact = compact ? "1" : "0";
+        const w = el.offsetWidth, h = el.offsetHeight;
+        const px = side > 0 ? p.king.r + gap * 0.3 : p.king.l - gap * 0.3 - w, py = ay - h * 0.8;
+        let best = { x: px, y: py, s: Infinity, ov: Infinity };
+        const maxX = Math.max(pad, W - w - pad), maxY = Math.max(pad, H - h - pad);
+        const step = Math.max(8, Math.round(Math.min(W, H) / 60));
+        for (let y = pad; y <= maxY; y += step) for (let x = pad; x <= maxX; x += step) {
+          const r: R = { l: x, t: y, r: x + w, b: y + h };
+          let ov = 0; for (const o of obs) ov += ix(r, o);
+          const sc = ov * 1000 + Math.hypot(x - px, y - py);
+          if (sc < best.s) best = { x, y, s: sc, ov };
+        }
+        return best;
+      };
+      let best = search(false);
+      if (best.ov > 0) {
+        const c = search(true);
+        if (c.ov < best.ov) best = c; else search(false);
       }
       const key = Math.round(best.x) + "," + Math.round(best.y);
       if (key !== last) { last = key; el.style.left = Math.round(best.x) + "px"; el.style.top = Math.round(best.y) + "px"; }
       el.style.visibility = "visible";
     };
     tick();
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("rc-device", force); window.removeEventListener("resize", force); };
   }, []);
   return <div className="thought" ref={ref} style={{ left: 0, top: 0, visibility: "hidden" }}>{children}</div>;
 }
@@ -183,14 +235,14 @@ export function CourtUI() {
       {step === "ask" && card && (
         <DecisionBubble anchor={anchor}>
           <div className="choice">
-            <button className="btn yes" onClick={() => choose("yes")} disabled={!yes?.ok} aria-label={`Yes: ${card.yesLabel ?? "Yes"}`}><Ico name="check" fallback="✓" /><Hint k="yes" /></button>
+            <button className="btn yes" onClick={() => choose("yes")} disabled={!yes?.ok} aria-label={`Yes: ${card.yesLabel ?? "Yes"}`} title={card.yesLabel ?? "Yes"}><Ico name="check" fallback="✓" /><Hint k="yes" /></button>
             <div className="lbl">{card.yesLabel ?? "Yes"}</div>
             {yes && !yes.ok && <div className="need">Need {yes.cost} <Ico name="coin" fallback="🪙" /></div>}
             {yes?.pay === "credit" && <div className="need"><Ico name="card" fallback="💳" /> card</div>}
             {yes?.pay === "item" && <div className="lbl">use <EmoIco e={ITEMS[card.orItem!]?.icon} /></div>}
           </div>
           <div className="choice">
-            <button className="btn no" onClick={() => choose("no")} disabled={!no?.ok} aria-label={`No: ${card.noLabel ?? "No"}`}><Ico name="cross" fallback="✗" /><Hint k="no" /></button>
+            <button className="btn no" onClick={() => choose("no")} disabled={!no?.ok} aria-label={`No: ${card.noLabel ?? "No"}`} title={card.noLabel ?? "No"}><Ico name="cross" fallback="✗" /><Hint k="no" /></button>
             <div className="lbl">{card.noLabel ?? "No"}</div>
           </div>
         </DecisionBubble>
@@ -207,7 +259,7 @@ export function CourtUI() {
           <div className="card panel">
             <div className="ribbon">That's everyone!</div>
             <p className="med display">The court is closed for today.</p>
-            <div className="footer"><button className="btn gold" onClick={next} autoFocus>See the day ▶</button></div>
+            <div className="footer"><button className="btn gold hero" onClick={next} autoFocus><Ico name="sun" fallback="☀️" /> See the day <span className="go">▶</span></button></div>
           </div>
         </div>
       )}

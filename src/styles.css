@@ -27,22 +27,16 @@
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
-/* ===== SIZE BRACKETS: authored fixed-px UI scale (1u = --u).  s: h<=480 phone landscape | m: 481-800 | l: 801-1200 | xl: >=1201.
-   Until src/platform/device.ts sets <html data-size>, the media queries below (same thresholds) apply; the attribute wins when present. ===== */
-@media (max-height: 480px) { :root:not([data-size]) { --u: 6.4px; } }
-@media (max-height: 480px) and (min-height: 400px) { :root:not([data-size]) { --u: 7px; } }
-@media (min-height: 481px) and (max-height: 800px) { :root:not([data-size]) { --u: 10px; } }
-@media (min-height: 481px) and (max-height: 800px) and (min-width: 1100px) { :root:not([data-size]) { --u: 12px; } }
-@media (min-height: 801px) and (max-height: 1200px) { :root:not([data-size]) { --u: 15px; } }
-@media (min-height: 801px) and (max-height: 1200px) and (min-width: 1800px) { :root:not([data-size]) { --u: 17px; } }
-@media (min-height: 1201px) { :root:not([data-size]) { --u: 22px; } }
-:root[data-size="s"] { --u: 6.4px; }
-:root[data-size="m"] { --u: 10px; }
-:root[data-size="l"] { --u: 15px; }
-:root[data-size="xl"] { --u: 22px; }
-@media (min-height: 400px) { :root[data-size="s"] { --u: 7px; } }
-@media (min-width: 1100px) { :root[data-size="m"] { --u: 12px; } }
-@media (min-width: 1800px) { :root[data-size="l"] { --u: 17px; } }
+/* ===== FLUID SCALE: 1u = --u, interpolated continuously from the real viewport.
+   src/platform/device.ts (unitFor) sets --ud (day) / --un (night) inline on <html> on every resize / zoom / DPR / rotate and
+   caps it by width; the clamp()s below are the same curve's CSS-only fallback (before JS runs / if it is blocked).
+   html[data-size] s/m/l/xl are now LAYOUT presets only (stat bar vs corner plate, grid columns ...), they no longer pick a px size. ===== */
+:root {
+  --ud: clamp(4px, min(1.22vh, .78vw), 40px);
+  --un: clamp(4.8px, min(1.55vh, 1vw), 48px);
+  --u: var(--ud);
+}
+:root[data-theme="night"] { --u: var(--un); }
 
 :root[data-contrast="high"] {
   --parch: #fffaf0;
@@ -567,11 +561,6 @@ body:has(.treasury) .phase-dots, body:has(.treasury) .stats { visibility: hidden
 :root .rotate { z-index: 99; }
 
 /* ===== compact decision bubble (fixed px per bracket, placed by DecisionBubble in CourtUI) ===== */
-:root { --dec-btn: 64px; --dec-font: 15px; --dec-pad: 10px; }
-:root[data-size="s"] { --dec-btn: 56px; --dec-font: 14px; --dec-pad: 7px; }
-:root[data-size="m"] { --dec-btn: 64px; --dec-font: 15px; }
-:root[data-size="l"] { --dec-btn: 76px; --dec-font: 18px; --dec-pad: 12px; }
-:root[data-size="xl"] { --dec-btn: 96px; --dec-font: 23px; --dec-pad: 16px; }
 .thought { position: fixed; gap: calc(var(--dec-pad) * 1.6); padding: var(--dec-pad) calc(var(--dec-pad) * 1.6); animation: none; transition: none; }
 .thought::after, .thought::before { display: none; }
 .thought .choice { gap: calc(var(--dec-pad) * .4); position: relative; }
@@ -623,20 +612,37 @@ body:has(.treasury) .phase-dots, body:has(.treasury) .stats, body:has(.scroll) .
 }
 
 /* ===== round 4: smaller daytime UI (Sort the Court proportions) + hand-drawn SVG frames ===== */
-/* day UI uses a smaller unit than night: fixed px per bracket */
-:root[data-theme="day"][data-size="s"] { --u: 5.4px; }
-@media (min-height: 400px) { :root[data-theme="day"][data-size="s"] { --u: 5.8px; } }
-:root[data-theme="day"][data-size="m"] { --u: 7.8px; }
-@media (min-width: 1100px) { :root[data-theme="day"][data-size="m"] { --u: 8.8px; } }
-:root[data-theme="day"][data-size="l"] { --u: 11px; }
-@media (min-width: 1800px) { :root[data-theme="day"][data-size="l"] { --u: 12.5px; } }
-:root[data-theme="day"][data-size="xl"] { --u: 16px; }
-:root { --dec-btn: 58px; }
-:root[data-size="s"] { --dec-btn: 56px; --dec-font: 14px; }
-:root[data-size="m"] { --dec-btn: 58px; --dec-font: 15px; }
-:root[data-size="l"] { --dec-btn: 66px; --dec-font: 17px; --dec-pad: 11px; }
-:root[data-size="xl"] { --dec-btn: 80px; --dec-font: 21px; --dec-pad: 14px; }
+:root { --dec-btn: max(56px, calc(var(--u) * 4.2 + 21px)); --dec-font: clamp(14px, calc(var(--u) * 1.5 + 2px), 80px); --dec-pad: clamp(7px, calc(var(--u) * .9), 60px); }
 .btn { min-height: max(56px, calc(var(--u) * 6.2)); min-width: max(56px, calc(var(--u) * 6.2)); }
 /* hand-wobble on icons in the day theme (SVG displacement filter injected by icons.tsx) */
 :root[data-theme="day"] .ico-img { filter: url(#rc-hand); }
 :root[data-theme="day"] .btn.yes, :root[data-theme="day"] .btn.no { background-size: 100% 100%; }
+
+/* ===== round 5: "one big stylized button" — hero primary actions, small secondary buttons ===== */
+.btn.hero {
+  font-size: calc(var(--u) * 3.5 * var(--ts)); min-height: max(64px, calc(var(--u) * 8.4)); min-width: min(calc(var(--u) * 26), 90vw);
+  padding: 0 calc(var(--u) * 4.2); gap: calc(var(--u) * 1.2); letter-spacing: .02em; line-height: 1.05;
+  animation: heroIdle 2.6s ease-in-out infinite;
+}
+.btn.hero .ico-img { width: 1.5em; height: 1.5em; }
+.btn.hero .go { font-size: .8em; margin-left: .1em; }
+.btn.hero:hover:not(:disabled) { filter: brightness(1.07) saturate(1.1); }
+.btn.hero:active:not(:disabled), .btn.hero.pressed { animation: none; transform: translateY(calc(var(--u) * .5)) scale(.97); }
+.btn.hero:disabled { animation: none; }
+/* idle shimmer is colour-only (no movement), so the big target never wiggles under a finger / cursor */
+@keyframes heroIdle { 0%, 100% { filter: none } 50% { filter: brightness(1.1) saturate(1.12) } }
+.btn.sm { font-size: calc(var(--u) * 2 * var(--ts)); min-height: max(56px, calc(var(--u) * 5.2)); padding: 0 calc(var(--u) * 2); }
+:root[data-size="s"] .btn.hero { min-height: max(56px, calc(var(--u) * 8.4)); font-size: calc(var(--u) * 3.6 * var(--ts)); }
+/* text-style tertiary action (kept >= 56px tall so it is still a fair tap target) */
+:root[data-theme]:not([data-contrast="high"]) .btn.link {
+  border: 0; border-image: none; background: none; box-shadow: none; color: var(--ink-soft); text-shadow: none; text-decoration: underline; text-underline-offset: .2em;
+  font-size: calc(var(--u) * 2 * var(--ts)); min-height: max(56px, calc(var(--u) * 5.2)); padding: 0 calc(var(--u) * 1.4);
+}
+.footer.stack { flex-direction: column; align-items: center; gap: calc(var(--u) * 1.2); }
+/* hero button inside the interact slot on the street: a little lift so it floats above the ground */
+.interact .btn.hero { box-shadow: 0 calc(var(--u) * .8) calc(var(--u) * 2) rgba(0,0,0,.35); }
+
+/* compact (icon-only) decision card: used when the full card cannot be placed without covering the king / owl / visitor / HUD */
+.thought[data-compact="1"] .choice .lbl, .thought[data-compact="1"] .choice .need { display: none; }
+.thought[data-compact="1"] { gap: calc(var(--dec-pad) * 1.1); padding: calc(var(--dec-pad) * .8) calc(var(--dec-pad) * 1.1); }
+.btn.hero { white-space: nowrap; max-width: 100%; }

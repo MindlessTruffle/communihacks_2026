@@ -3,7 +3,7 @@ import { useGame } from "../game/store.ts";
 import { courtSummary } from "../game/sim/sim.ts";
 import { summarySentence, ADVISOR } from "../game/content/advisor.ts";
 import { speak, sfx, stopVoice } from "../audio/audio.ts";
-import { CoinIcon, Continue, HappyIcon, Ico, PeopleIcon } from "./icons.tsx";
+import { CoinIcon, HappyIcon, Ico, PeopleIcon } from "./icons.tsx";
 
 export function Summary() {
   const run = useGame((s) => s.run)!;
@@ -40,7 +40,7 @@ export function Summary() {
         </div>
         <div style={{ fontSize: "calc(var(--u)*7)", lineHeight: 1.1 }}>{dh >= 0 && dp >= 0 ? <Ico name="house" fallback="🏠" /> : "🏚️"}</div>
         <div className="big display">{sentence}</div>
-        <div className="footer"><span className="tap-hint"><Continue /></span></div>
+        <div className="footer"><button className="btn gold hero" autoFocus onClick={(e) => { e.stopPropagation(); go(); }}><Ico name="lantern" fallback="🏮" /> Continue <span className="go">▶</span></button></div>
       </div>
     </div>
   );

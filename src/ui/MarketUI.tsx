@@ -110,10 +110,12 @@ function ItemCard({ id }: { id: string }) {
         {onList ? <><Ico name="boxchecked" fallback="✅" /> On your list!</> : trap ? <><Ico name="bulb" fallback="🤔" /> Shiny! But not on your list.</> : <><Ico name="note" fallback="📝" /> Not on your list.</>}
         {overAfter && <><br /><Ico name="warning" fallback="⚠️" /> This goes over your budget ({wouldBe} / {market.budget}).</>}
       </p>
-      <div className="footer" style={{ display: "flex", gap: "calc(var(--u)*1.4)", justifyContent: "center", flexWrap: "wrap" }}>
-        <button className="btn gold" onClick={take}><Ico name="basket" fallback="🧺" /> Put in basket</button>
-        {inBasket > 0 && <button className="btn ghost" onClick={putBack}>↩ Put one back ({inBasket})</button>}
-        <button className="btn ghost" onClick={close}>✗ Leave it</button>
+      <div className="footer stack">
+        <button className="btn gold hero" onClick={take}><Ico name="basket" fallback="🧺" /> Put in basket <span className="go">▶</span></button>
+        <div style={{ display: "flex", gap: "calc(var(--u)*1.4)", justifyContent: "center", flexWrap: "wrap" }}>
+          {inBasket > 0 && <button className="btn ghost sm" onClick={putBack}>↩ Put one back ({inBasket})</button>}
+          <button className="btn link" onClick={close}>Leave it</button>
+        </div>
       </div>
     </div>
   );
@@ -162,7 +164,7 @@ function Checkout() {
         {r.missing.length > 0 && (
           <p className="small" style={{ fontWeight: 700 }}>The kingdom still needs: {r.missing.map((id) => `${ITEM_EMOJI[id] ?? ""} ${MARKET_BY_ID[id]?.name}`).join(", ")}</p>
         )}
-        <div className="footer"><button className="btn gold" onClick={go}><Ico name="bed" fallback="🛏️" /> Go to sleep ▶</button></div>
+        <div className="footer"><button className="btn gold hero" autoFocus onClick={go}><Ico name="bed" fallback="🛏️" /> Go to sleep <span className="go">▶</span></button></div>
       </div>
     </div>
   );
@@ -196,7 +198,7 @@ export default function MarketUI() {
       {!touch && !selected && <div className="crosshair" />}
       {selected && <ItemCard id={selected} />}
       {!selected && nearCashier && (
-        <div className="interact"><button className="btn gold" onClick={pay}><Ico name="purse" fallback="💰" /> Pay at the counter <Hint k="next" /></button></div>
+        <div className="interact"><button className="btn gold hero" onClick={pay}><Ico name="purse" fallback="💰" /> Pay at the counter <Hint k="next" /></button></div>
       )}
       {!selected && !nearCashier && (
         <div className="hint-pill panel" style={touch ? { left: "auto", right: "calc(var(--u)*24)", transform: "none" } : undefined}>

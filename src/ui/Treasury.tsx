@@ -139,7 +139,7 @@ export function Treasury({ onClose }: { onClose: () => void }) {
           {body}
           <p className="real"><Ico name="house" fallback="🏠" /> {u?.realLife}</p>
           <div className="msg">{msg}</div>
-          <div className="ctrls"><button className="btn" onClick={() => { sfx("doorClose"); onClose(); }}>◀ Back</button></div>
+          <div className="ctrls"><button className="btn gold hero" onClick={() => { sfx("doorClose"); onClose(); }}><Ico name="check" fallback="✓" /> Done</button></div>
         </div>
       </div>
     </div>

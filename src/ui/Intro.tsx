@@ -6,7 +6,7 @@ import { useGame } from "../game/store.ts";
 import { speak, sfx, stopVoice } from "../audio/audio.ts";
 import { Ico } from "./icons.tsx";
 
-// --- "How to play": 8 doodle cards hosted by Sage Ollie. Shown once per device (localStorage rc-intro-seen), replayable via openIntro(). ---
+// --- "How to play": a 3-step parchment scroll hosted by Sage Ollie. Shown once per device (localStorage rc-intro-seen), replayable via openIntro(). ---
 
 const SEEN_KEY = "rc-intro-seen";
 const readSeen = () => { try { return localStorage.getItem(SEEN_KEY) === "1"; } catch { return false; } };
@@ -59,151 +59,92 @@ const Img = ({ n, x, y, s, delay, cls = "pop" }: { n: string; x: number; y: numb
   <G cls={cls} delay={delay}><image href={`/ui/icons/${n}.png`} x={x} y={y} width={s} height={s} /></G>
 );
 
-// ------------------------------------------------------------------ the eight scenes (viewBox 200 x 140)
-function Crown() {
+
+// ------------------------------------------------------------------ the three scenes (viewBox 200 x 140)
+function Ruler() {
   return (<>
-    <P d="M74 92 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0" fill="#ffe0b8" delay={0.1} dur={0.9} />
-    <P d="M50 140 Q56 120 100 118 Q144 120 150 140" fill="#7fb3e8" delay={0.6} dur={0.6} />
-    <P d="M91 89 v3 M109 89 v3" w={4.6} delay={1} dur={0.2} />
-    <P d="M89 101 Q100 111 111 101" delay={1.1} dur={0.3} />
-    <G cls="drop" delay={1.4}>
-      <path d="M74 68 L78 40 L91 54 L100 34 L109 54 L122 40 L126 68 Z" fill="#f6c23a" stroke={INK} strokeWidth={3.4} strokeLinejoin="round" />
-      <path d="M77 61 H123" stroke={INK} strokeWidth={2.6} strokeLinecap="round" />
-      <circle cx="100" cy="50" r="3.2" fill="#e5484d" stroke={INK} strokeWidth={1.6} />
+    <g transform="translate(-34 14) scale(.8)">
+      <P d="M74 92 a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0" fill="#ffe0b8" delay={0.1} dur={0.9} />
+      <P d="M50 140 Q56 120 100 118 Q144 120 150 140" fill="#7fb3e8" delay={0.6} dur={0.6} />
+      <P d="M91 89 v3 M109 89 v3" w={4.6} delay={1} dur={0.2} />
+      <P d="M89 101 Q100 111 111 101" delay={1.1} dur={0.3} />
+      <G cls="drop" delay={1.4}>
+        <path d="M74 68 L78 40 L91 54 L100 34 L109 54 L122 40 L126 68 Z" fill="#f6c23a" stroke={INK} strokeWidth={3.4} strokeLinejoin="round" />
+        <path d="M77 61 H123" stroke={INK} strokeWidth={2.6} strokeLinecap="round" />
+        <circle cx="100" cy="50" r="3.2" fill="#e5484d" stroke={INK} strokeWidth={1.6} />
+      </G>
+    </g>
+    <P d="M88 12 H166 Q178 12 178 24 V40 Q178 52 166 52 H116 L100 66 L104 52 H88 Q76 52 76 40 V24 Q76 12 88 12 Z" fill="#fffaf0" delay={1.7} dur={0.8} />
+    <P d="M118 25 Q118 19 127 19 Q136 19 136 27 Q136 32 127 36 V39 M127 46 v1" w={4} delay={2.3} dur={0.5} />
+    <G cls="pop press" delay={2.6}>
+      <circle cx="108" cy="104" r="19" fill="#3cb878" stroke={INK} strokeWidth={3.4} />
+      <path d="M98 104 L105 112 L119 95" fill="none" stroke="#fff" strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" />
     </G>
-    <Spark x={48} y={52} delay={2} /><Spark x={154} y={44} delay={2.2} s={1.2} /><Spark x={162} y={96} delay={2.4} s={0.8} />
+    <G cls="pop press2" delay={2.9}>
+      <path d="M142 86 H166 Q174 86 174 94 V116 Q174 124 166 124 H142 Q134 124 134 116 V94 Q134 86 142 86 Z" fill="#e2683f" stroke={INK} strokeWidth={3.4} />
+      <path d="M145 96 L163 114 M163 96 L145 114" fill="none" stroke="#fff" strokeWidth={5.5} strokeLinecap="round" />
+    </G>
+    <Spark x={24} y={22} delay={3.3} s={0.9} /><Spark x={186} y={80} delay={3.5} s={0.7} />
   </>);
 }
 
-function AskYesNo() {
-  return (<>
-    <P d="M14 140 Q18 106 42 104 Q66 106 70 140" fill="#7fb3e8" delay={0.1} dur={0.6} />
-    <P d="M26 84 a16 16 0 1 0 32 0 a16 16 0 1 0 -32 0" fill="#ffe0b8" delay={0.3} dur={0.7} />
-    <P d="M36 82 v2 M48 82 v2" w={4} delay={0.9} dur={0.2} />
-    <P d="M36 91 Q42 96 48 91" w={3} delay={1} dur={0.2} />
-    <P d="M30 12 H112 Q124 12 124 24 V42 Q124 54 112 54 H68 L50 66 L54 54 H30 Q18 54 18 42 V24 Q18 12 30 12 Z" fill="#fffaf0" delay={0.9} dur={0.9} />
-    <P d="M62 26 Q62 20 71 20 Q80 20 80 28 Q80 33 71 37 V41 M71 48 v1" w={4} delay={1.7} dur={0.5} />
-    <G cls="pop press" delay={1.9}>
-      <circle cx="128" cy="104" r="19" fill="#3cb878" stroke={INK} strokeWidth={3.4} />
-      <path d="M118 104 L125 112 L139 95" fill="none" stroke="#fff" strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" />
-    </G>
-    <G cls="pop press2" delay={2.2}>
-      <path d="M158 86 H182 Q190 86 190 94 V116 Q190 124 182 124 H158 Q150 124 150 116 V94 Q150 86 158 86 Z" fill="#e2683f" stroke={INK} strokeWidth={3.4} />
-      <path d="M161 96 L179 114 M179 96 L161 114" fill="none" stroke="#fff" strokeWidth={5.5} strokeLinecap="round" />
-    </G>
-    <text x="128" y="136" className="lbl" textAnchor="middle">Yes</text>
-    <text x="170" y="136" className="lbl" textAnchor="middle">No</text>
-  </>);
-}
-
-function Stats() {
-  const items = [["people", "People", 15], ["happy", "Happy", 75], ["coin", "Gold", 135]] as const;
+function Watch() {
+  const items = [["people", "People", 18], ["happy", "Happy", 83], ["coin", "Gold", 148]] as const;
   return (<>
     {items.map(([n, label, x], i) => (
       <g key={n}>
-        <Img n={n} x={x} y={24} s={50} delay={0.3 + i * 0.7} cls="pop wig" />
-        <P d={`M${x} 88 Q${x + 25} 95 ${x + 50} 87`} delay={0.8 + i * 0.7} dur={0.5} w={3} />
-        <G cls="fade" delay={0.9 + i * 0.7}><text x={x + 25} y="112" className="lbl" textAnchor="middle">{label}</text></G>
+        <Img n={n} x={x} y={2} s={34} delay={0.2 + i * 0.5} cls="pop wig" />
+        <G cls="fade" delay={0.6 + i * 0.5}><text x={x + 17} y="49" className="lbl small" textAnchor="middle">{label}</text></G>
       </g>
     ))}
-    <Spark x={100} y={14} delay={2.6} s={0.8} />
+    <P d="M10 60 Q100 66 190 59" w={2.6} delay={1.8} dur={0.7} />
+    <Img n="bread" x={20} y={70} s={46} delay={2.2} />
+    <Img n="cake" x={128} y={70} s={46} delay={2.9} cls="pop dim" />
+    <G cls="pop" delay={3.0}>
+      <circle cx="64" cy="76" r="11" fill="#3cb878" stroke={INK} strokeWidth={2.8} />
+      <path d="M58 76 L62 81 L71 70" fill="none" stroke="#fff" strokeWidth={3.8} strokeLinecap="round" strokeLinejoin="round" />
+    </G>
+    <P d="M82 100 H110 M102 94 L110 100 L102 106" w={3} delay={3.2} dur={0.5} />
+    <G cls="fade" delay={3.4}><text x="43" y="132" className="lbl" textAnchor="middle">Needs</text></G>
+    <G cls="fade" delay={3.8}><text x="151" y="132" className="lbl" textAnchor="middle">Wants</text></G>
   </>);
 }
 
-function NeedWant() {
-  return (<>
-    <Img n="bread" x={18} y={26} s={62} delay={0.3} />
-    <Img n="cake" x={120} y={26} s={62} delay={0.9} cls="pop dim" />
-    <G cls="pop" delay={1.7}>
-      <circle cx="84" cy="30" r="15" fill="#3cb878" stroke={INK} strokeWidth={3.2} />
-      <path d="M76 30 L82 37 L93 23" fill="none" stroke="#fff" strokeWidth={4.6} strokeLinecap="round" strokeLinejoin="round" />
-    </G>
-    <P d="M86 66 Q101 44 116 66 M108 60 L116 66 L120 56" w={3} delay={2.2} dur={0.6} />
-    <G cls="fade" delay={1.1}><text x="49" y="104" className="lbl" textAnchor="middle">Need</text></G>
-    <G cls="fade" delay={1.5}><text x="151" y="104" className="lbl" textAnchor="middle">Want</text></G>
-    <P d="M20 110 Q49 117 78 109" w={3} delay={1.2} dur={0.5} /><P d="M122 110 Q151 117 180 109" w={3} delay={1.6} dur={0.5} />
-  </>);
-}
-
-function Evening() {
-  return (<>
-    <P d="M36 46 Q50 18 64 46" w={3} delay={0.1} dur={0.5} />
-    <P d="M34 48 H66 L62 56 H38 Z" fill="#8a6a3c" delay={0.4} dur={0.5} />
-    <P d="M40 56 H60 Q70 78 66 104 Q66 112 58 112 H42 Q34 112 34 104 Q30 78 40 56 Z" fill="#ffe27a" delay={0.7} dur={0.9} />
-    <P d="M36 112 H64 V119 H36 Z" fill="#8a6a3c" delay={1.4} dur={0.4} />
-    <G cls="pop flame" delay={1.9}><path d="M50 102 Q40 90 50 74 Q60 90 50 102 Z" fill="#f08a24" stroke={INK} strokeWidth={2.4} strokeLinejoin="round" /></G>
-    <G cls="fade rays" delay={2.1}>
-      <path d="M50 52 V44 M72 70 L80 66 M28 70 L20 66 M73 100 L81 104 M27 100 L19 104" stroke="#e0a018" strokeWidth={3.4} strokeLinecap="round" />
-    </G>
-    <P d="M98 14 H168 Q180 14 180 26 V46 Q180 58 168 58 H118 L104 72 L108 58 H98 Q86 58 86 46 V26 Q86 14 98 14 Z" fill="#fffaf0" delay={1.6} dur={0.9} />
-    <G cls="pop" delay={2.5}><path d="M133 48 C112 36 118 22 127 26 C131 28 133 31 133 31 C133 31 135 28 139 26 C148 22 154 36 133 48 Z" fill="#ee5b6b" stroke={INK} strokeWidth={2.8} strokeLinejoin="round" /></G>
-    <G cls="pop roll" delay={3}>
-      <rect x="124" y="86" width="40" height="40" rx="9" fill="#fff" stroke={INK} strokeWidth={3.4} />
-      <circle cx="134" cy="96" r="3" fill={INK} /><circle cx="154" cy="96" r="3" fill={INK} /><circle cx="144" cy="106" r="3" fill={INK} />
-      <circle cx="134" cy="116" r="3" fill={INK} /><circle cx="154" cy="116" r="3" fill={INK} />
-    </G>
-  </>);
-}
-
-function Market() {
+function Plan() {
   const rows = [38, 66, 94];
   return (<>
-    <P d="M20 14 H92 Q100 14 100 22 V126 H28 Q20 126 20 118 Z" fill="#fffaf0" delay={0.1} dur={0.9} />
-    <P d="M32 28 H80" w={3.4} delay={0.9} dur={0.3} />
+    <P d="M10 12 H86 Q94 12 94 20 V128 H18 Q10 128 10 120 Z" fill="#fffaf0" delay={0.1} dur={0.9} />
+    <P d="M22 27 H74" w={3.4} delay={0.9} dur={0.3} />
     {rows.map((y, i) => (
       <g key={y}>
-        <P d={`M30 ${y} h13 v13 h-13 Z`} w={2.8} delay={1.1 + i * 0.25} dur={0.3} />
-        <P d={`M52 ${y + 7} H88`} w={3} delay={1.2 + i * 0.25} dur={0.3} />
-        <P d={`M31 ${y + 6} L36 ${y + 12} L45 ${y - 3}`} w={4.2} stroke="#2f9e5e" delay={2.0 + i * 0.9} dur={0.35} />
+        <P d={`M20 ${y} h13 v13 h-13 Z`} w={2.8} delay={1.1 + i * 0.25} dur={0.3} />
+        <P d={`M42 ${y + 7} H82`} w={3} delay={1.2 + i * 0.25} dur={0.3} />
+        <P d={`M21 ${y + 6} L26 ${y + 12} L35 ${y - 3}`} w={4.2} stroke="#2f9e5e" delay={2.0 + i * 0.9} dur={0.35} />
       </g>
     ))}
     <G cls="pen" delay={0}><path d="M0 0 L5 -6 L24 -25 L31 -18 L11 1 Z M24 -25 L31 -18" fill="#e5484d" stroke={INK} strokeWidth={2.6} strokeLinejoin="round" /></G>
-    {[0, 1, 2].map((i) => (
-      <G key={i} cls="pop" delay={3.2 + i * 0.25}>
-        <path d={`M126 ${116 - i * 12} v8 a24 8 0 0 0 48 0 v-8`} fill="#e0a018" stroke={INK} strokeWidth={3} strokeLinejoin="round" />
-        <ellipse cx="150" cy={116 - i * 12} rx="24" ry="8" fill="#ffd84a" stroke={INK} strokeWidth={3} />
-      </G>
-    ))}
-    <P d="M118 30 Q150 14 182 30" w={3} dash="0.04 0.05" delay={3.4} dur={0.6} />
-  </>);
-}
-
-function Jar() {
-  return (<>
-    <P d="M70 34 H130 M72 34 Q60 46 60 70 V118 Q60 130 72 130 H128 Q140 130 140 118 V70 Q140 46 128 34" w={3.6} fill="#e8f3f5" delay={0.1} dur={1} />
-    {[[84, 118], [116, 118], [100, 118], [92, 104], [108, 104], [100, 90]].map(([x, y], i) => (
-      <G key={i} cls="coin" delay={0.7 + i * 0.4}>
-        <circle cx={x} cy={y} r="10.5" fill="#ffd84a" stroke={INK} strokeWidth={2.8} />
-        <path d={`M${x - 4} ${y} h8`} stroke={INK} strokeWidth={2.4} strokeLinecap="round" />
-      </G>
-    ))}
-    <P d="M166 118 V44 M150 60 L166 42 L182 60" w={5} stroke="#2f9e5e" delay={2.9} dur={0.7} />
-    <Spark x={22} y={50} delay={3.7} s={0.9} /><Spark x={36} y={110} delay={3.9} s={0.7} />
-  </>);
-}
-
-function Go() {
-  return (<>
-    <P d="M52 130 V58 H62.7 V68 H73.3 V58 H84 V68 H94.7 V58 H105.3 V68 H116 V58 H126.7 V68 H137.3 V58 H148 V130 Z" fill="#d9c9a3" delay={0.1} dur={1.1} />
-    <path d="M88 130 V102 Q88 88 100 88 Q112 88 112 102 V130 Z" fill="#ffe27a" />
-    <G cls="door" delay={1.6}><path d="M88 130 V102 Q88 88 100 88 Q112 88 112 102 V130 Z" fill="#8a6a3c" stroke={INK} strokeWidth={3} strokeLinejoin="round" /></G>
-    <P d="M88 130 V102 Q88 88 100 88 Q112 88 112 102 V130" w={3.4} delay={1.1} dur={0.5} />
-    <P d="M100 58 V24" w={3.2} delay={1.2} dur={0.3} />
-    <G cls="pop flag" delay={1.6}><path d="M100 24 L128 33 L100 42 Z" fill="#e5484d" stroke={INK} strokeWidth={3} strokeLinejoin="round" /></G>
-    <Spark x={34} y={50} delay={2.2} s={1.1} /><Spark x={168} y={46} delay={2.4} /><Spark x={170} y={104} delay={2.6} s={0.8} />
+    <g transform="translate(79 52) scale(.62)">
+      <P d="M70 34 H130 M72 34 Q60 46 60 70 V118 Q60 130 72 130 H128 Q140 130 140 118 V70 Q140 46 128 34" w={4.2} fill="#e8f3f5" delay={3.2} dur={0.8} />
+      {[[84, 118], [116, 118], [100, 118], [92, 104], [108, 104], [100, 90]].map(([x, y], i) => (
+        <G key={i} cls="coin" delay={3.9 + i * 0.3}>
+          <circle cx={x} cy={y} r="10.5" fill="#ffd84a" stroke={INK} strokeWidth={3} />
+          <path d={`M${x - 4} ${y} h8`} stroke={INK} strokeWidth={2.6} strokeLinecap="round" />
+        </G>
+      ))}
+    </g>
+    <P d="M172 112 V44 M159 58 L172 42 L185 58" w={4.4} stroke="#2f9e5e" delay={5.6} dur={0.7} />
+    <Spark x={130} y={26} delay={6.2} s={0.9} /><Spark x={104} y={40} delay={6.4} s={0.6} />
   </>);
 }
 
 interface Step { lines: string[]; scene: () => ReactNode; cues: [number, string, number?][] }
 const STEPS: Step[] = [
-  { lines: ["You are the new ruler!"], scene: Crown, cues: [[250, "scribble"], [1550, "boing"], [1800, "sparkle"]] },
-  { lines: ["People visit you.", "They ask for things.", "Tap yes or no."], scene: AskYesNo, cues: [[200, "scribble"], [1050, "pop"], [2050, "yes"], [2350, "no"]] },
-  { lines: ["Watch three things.", "People. Happiness. Gold."], scene: Stats, cues: [[400, "pop", 0.9], [1100, "pop", 1.05], [1800, "coinIn"]] },
-  { lines: ["Needs come first.", "Wants come later."], scene: NeedWant, cues: [[400, "pop"], [1000, "pop", 1.15], [1800, "good"], [2300, "scribble"]] },
-  { lines: ["In the evening, walk the town.", "Talk kindly.", "Play mini games."], scene: Evening, cues: [[200, "scribble"], [2000, "sparkle"], [2600, "pop"], [3100, "boing"]] },
-  { lines: ["At night, go to the market.", "Make a list.", "Stick to your budget."], scene: Market, cues: [[150, "page"], [1000, "scribble"], [2100, "tick"], [3000, "tick"], [3900, "tick"], [4000, "coinIn"]] },
-  { lines: ["Save your money.", "It grows over time."], scene: Jar, cues: [[900, "coinIn"], [1300, "coinIn"], [1700, "coinIn"], [3000, "growth"]] },
-  { lines: ["Ready?", "Let's go!"], scene: Go, cues: [[200, "scribble"], [1700, "door"], [1900, "fanfare"]] },
+  { lines: ["You are the ruler!", "People ask for help.", "Tap ✓ or ✗."], scene: Ruler,
+    cues: [[250, "scribble"], [1550, "boing"], [2650, "yes"], [2950, "no"], [3350, "sparkle"]] },
+  { lines: ["Watch your people, happiness and gold.", "Needs first. Wants later."], scene: Watch,
+    cues: [[300, "pop", 0.9], [800, "pop", 1.05], [1300, "pop", 1.2], [2300, "pop"], [3000, "good"], [3400, "scribble"]] },
+  { lines: ["At night, make a shopping list.", "Stick to your budget.", "Save gold, and your kingdom grows!"], scene: Plan,
+    cues: [[150, "page"], [1000, "scribble"], [2100, "tick"], [3000, "tick"], [3900, "tick"], [4300, "coinIn"], [4900, "coinIn"], [5700, "growth"]] },
 ];
 
 // ------------------------------------------------------------------ Esc skips the intro before App's pause-menu handler sees it (module-level capture listener)
@@ -217,115 +158,125 @@ if (typeof window !== "undefined") {
 
 export function Intro() {
   const open = useIntro((s) => s.open);
-  return open ? <IntroCard /> : null;
+  return open ? <IntroScroll /> : null;
 }
 
-function IntroCard() {
+const OPEN_MS = 950, ROLL_MS = 700, CLOSE_MS = 750;
+
+function IntroScroll() {
   const close = useIntro((s) => s.close);
   const reduce = useGame((s) => s.settings.reduceMotion);
   const [step, setStep] = useState(0);
+  const [shown, setShown] = useState(-1); // highest step whose doodle + text have started animating
+  const [closing, setClosing] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const touched = useRef(false);
   const stepRef = useRef(0);
+  const closingRef = useRef(false);
+  const lastGo = useRef(0);
   stepRef.current = step;
   const last = step === STEPS.length - 1;
-  const cur = STEPS[step];
 
   const finish = useCallback((done: boolean) => {
+    if (closingRef.current) return;
+    closingRef.current = true;
     stopVoice();
-    if (done) sfx("sparkle");
-    close();
-  }, [close]);
+    sfx(done ? "sparkle" : "scrollClose");
+    if (done) window.setTimeout(() => sfx("scrollClose"), 150);
+    setClosing(true);
+    window.setTimeout(close, reduce ? 220 : CLOSE_MS);
+  }, [close, reduce]);
 
-  const go = useCallback((dir: 1 | -1, byUser: boolean) => {
-    if (byUser) touched.current = true;
-    const n = stepRef.current + dir;
-    if (n < 0) return;
-    if (n >= STEPS.length) { finish(true); return; }
-    setStep(n);
-  }, [finish]);
+  const next = useCallback(() => {
+    if (closingRef.current) return;
+    const now = performance.now();
+    if (now - lastGo.current < (reduce ? 120 : 420)) return; // ignore double taps while the paper is still rolling
+    lastGo.current = now;
+    const n = stepRef.current + 1;
+    if (n >= STEPS.length) finish(true); else setStep(n);
+  }, [finish, reduce]);
 
-  // Esc = skip (the module-level capture listener above calls this).
   useEffect(() => { esc.skip = () => finish(false); return () => { esc.skip = null; stopVoice(); }; }, [finish]);
 
-  // Keys: Space / Enter / -> next (pad A arrives as Enter), <- back. Swallowed so the game under us never sees them.
+  // Keys: Space / Enter / -> = Next (gamepad A arrives as Enter). y / n / <- / Backspace are swallowed (pad B arrives as "n"): nothing to go back to.
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       const key = e.key;
       const mine = key === "Enter" || key === " " || key === "ArrowRight" || key === "ArrowLeft" || key === "y" || key === "n" || key === "Backspace";
       if (!mine) return;
-      if ((key === "Enter" || key === " ") && t?.closest?.("[data-native]")) return; // let a focused Skip / Back / Hear-again button do its own thing
+      if ((key === "Enter" || key === " ") && t?.closest?.("[data-native]")) return; // a focused Skip link does its own click
       e.stopImmediatePropagation(); e.preventDefault();
       if (e.repeat) return;
-      if (key === "ArrowLeft" || key === "Backspace") go(-1, true);
-      else if (key === "Enter" || key === " " || key === "ArrowRight") go(1, true);
+      if (key === "Enter" || key === " " || key === "ArrowRight") next();
     };
     window.addEventListener("keydown", k, true);
     return () => window.removeEventListener("keydown", k, true);
-  }, [go]);
-
-  // Each card: page-flip, sound cues timed to the doodle, Ollie's voice. Auto-advance only after a real voice ends and only if untouched.
-  const say = useCallback((auto: boolean) => {
-    const text = STEPS[stepRef.current].lines.join(" ");
-    const t0 = performance.now();
-    const idx = stepRef.current;
-    setSpeaking(true);
-    return speak("advisor", text, { caption: false }).then(() => {
-      if (stepRef.current !== idx) return;
-      setSpeaking(false);
-      const real = performance.now() - t0 > 900; // muted / no voice resolves instantly: never auto-advance then
-      if (auto && real && !touched.current && idx < STEPS.length - 1) {
-        const id = window.setTimeout(() => { if (!touched.current && stepRef.current === idx) go(1, false); }, 1200);
-        timers.current.push(id);
-      }
-    });
-  }, [go]);
-  const timers = useRef<number[]>([]);
+  }, [next]);
   useEffect(() => {
-    sfx(step === 0 ? "scroll" : "page");
-    const cues = reduce ? cur.cues.slice(0, 1).map(([, n, r]) => [150, n, r] as [number, string, number?]) : cur.cues;
-    const ids = cues.map(([ms, name, rate]) => window.setTimeout(() => sfx(name, rate ? { rate } : {}), ms));
-    timers.current = ids;
-    void say(true);
-    return () => { ids.forEach(window.clearTimeout); timers.current.forEach(window.clearTimeout); timers.current = []; };
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+    const b = (e: Event) => e.stopImmediatePropagation(); // rc-back (gamepad B): swallow, there is no Back
+    window.addEventListener("rc-back", b, true);
+    return () => window.removeEventListener("rc-back", b, true);
+  }, []);
 
-  const Scene = cur.scene;
+  // Per step: paper sound, doodle starts once the paper has rolled into place, SFX cues timed to the doodle, Ollie's voice.
+  useEffect(() => {
+    const base = reduce ? 0 : step === 0 ? OPEN_MS - 150 : ROLL_MS - 100;
+    const ids: number[] = [];
+    const at = (ms: number, f: () => void) => { ids.push(window.setTimeout(f, ms)); };
+    sfx(step === 0 ? "scrollOpen" : "scrollWind");
+    if (!reduce && step === 0) at(OPEN_MS - 80, () => sfx("woodThunk"));
+    if (!reduce && step > 0) at(ROLL_MS - 60, () => sfx("woodThunk", { volume: 0.6 }));
+    at(base, () => setShown((s) => Math.max(s, step)));
+    const cues = reduce ? STEPS[step].cues.slice(0, 1).map(([, n, r]) => [0, n, r] as [number, string, number?]) : STEPS[step].cues;
+    cues.forEach(([ms, name, rate]) => at(base + ms, () => sfx(name, rate ? { rate } : {})));
+    at(base, () => {
+      setSpeaking(true);
+      void speak("advisor", STEPS[step].lines.join(" "), { caption: false }).then(() => { if (stepRef.current === step) setSpeaking(false); });
+    });
+    return () => ids.forEach(window.clearTimeout);
+  }, [step, reduce]);
+
+  const cur = STEPS[step];
+  const cls = "sc" + (reduce ? " rm" : "") + (closing ? " closing" : "");
   return (
-    <div className={"intro" + (reduce ? " rm" : "")} role="dialog" aria-modal="true" aria-label="How to play">
-      <div className="in-card" onClick={() => go(1, true)}>
-        <div className="in-head">
-          <div className={"in-ollie" + (speaking ? " talk" : "")}><Ico name="owl" fallback="🦉" /><b>Sage Ollie</b></div>
-          <div className="in-head-btns" onClick={(e) => e.stopPropagation()}>
-            <button data-native className="in-btn small" aria-label="Hear it again" onClick={(e) => { e.currentTarget.blur(); touched.current = true; void say(false); sfx("tap"); }}>
-              <Ico name="speaker" fallback="🔊" /><span className="in-lbl">Again</span>
+    <div className={cls} style={v({ "--step": step })} role="dialog" aria-modal="true" aria-label="How to play">
+      <div className="sc-wrap">
+        <div className="sc-rod top"><i className="coil" /><i className="peg l" /><i className="peg r" /></div>
+        <div className="sc-paper" onClick={next}>
+          <div className="sc-view">
+            <div className="sc-reel">
+              {STEPS.map((s, i) => {
+                const Scene = s.scene;
+                return (
+                  <section key={i} className={"sc-page" + (shown >= i ? " go" : "")} aria-hidden={i !== step} aria-live={i === step ? "polite" : undefined}>
+                    <div className="sc-stage"><svg viewBox="0 0 200 140" role="img" aria-label={s.lines.join(" ")}>
+                      <defs>
+                        <filter id={"sc-wobble" + i} x="-5%" y="-5%" width="110%" height="110%">
+                          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="t" />
+                          <feDisplacementMap in="SourceGraphic" in2="t" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
+                        </filter>
+                      </defs>
+                      {shown >= i && <g filter={`url(#sc-wobble${i})`}><Scene /></g>}
+                    </svg></div>
+                    <div className="sc-text">{s.lines.map((l, j) => <p key={j} style={v({ "--i": j })}>{l}</p>)}</div>
+                  </section>
+                );
+              })}
+            </div>
+          </div>
+          <div className="sc-foot">
+            <div className={"sc-ollie" + (speaking ? " talk" : "")} aria-hidden="true"><Ico name="owl" fallback="🦉" /></div>
+            <button className="sc-next" onClick={(e) => { e.stopPropagation(); e.currentTarget.blur(); sfx("click"); next(); }}>
+              {last ? "Let's go!" : "Next"} <span aria-hidden="true">▶</span>
             </button>
-            <button data-native className="in-btn small" onClick={() => { sfx("click"); finish(false); }}>Skip intro</button>
+            <button data-native className="sc-skip" onClick={(e) => { e.stopPropagation(); sfx("click"); finish(false); }}>Skip</button>
           </div>
         </div>
-        <div className="in-body">
-          <div className="in-stage">
-            <svg key={step} viewBox="0 0 200 140" role="img" aria-label={cur.lines.join(" ")}>
-              <defs>
-                <filter id="in-wobble" x="-5%" y="-5%" width="110%" height="110%">
-                  <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="t" />
-                  <feDisplacementMap in="SourceGraphic" in2="t" scale="3.4" xChannelSelector="R" yChannelSelector="G" />
-                </filter>
-              </defs>
-              <g filter="url(#in-wobble)"><Scene /></g>
-            </svg>
+        <div className="sc-rod bottom">
+          <i className="coil" /><i className="peg l" /><i className="peg r" />
+          <div className="sc-pips" role="img" aria-label={`Step ${step + 1} of ${STEPS.length}: ${cur.lines[0]}`}>
+            {STEPS.map((_, i) => <b key={i} className={i === step ? "on" : i < step ? "done" : ""} />)}
           </div>
-          <div className="in-text" aria-live="polite" key={"t" + step}>
-            {cur.lines.map((l, i) => <p key={i} style={v({ "--i": i })}>{l}</p>)}
-          </div>
-        </div>
-        <div className="in-foot" onClick={(e) => e.stopPropagation()}>
-          <button data-native className="in-btn" style={{ visibility: step === 0 ? "hidden" : "visible" }} onClick={(e) => { e.currentTarget.blur(); sfx("click"); go(-1, true); }} aria-label="Back">◀ Back</button>
-          <div className="in-dots" role="img" aria-label={`Step ${step + 1} of ${STEPS.length}`}>
-            {STEPS.map((_, i) => <i key={i} className={i === step ? "on" : i < step ? "done" : ""} />)}
-          </div>
-          <button data-native className="in-btn go" onClick={(e) => { e.currentTarget.blur(); go(1, true); }}>{last ? "Let's go!" : "Next ▶"}</button>
         </div>
       </div>
     </div>

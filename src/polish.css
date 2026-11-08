@@ -240,17 +240,12 @@ input[type=range] { height: max(32px, calc(var(--u) * 3.4)); }
    Conversation screen: compact, fixed-px layout so the NPC (centre third, upper-middle) is never covered.
    Left-top: speech panel. Right-bottom: replies. Left-bottom: Mic / No mic / Done bar. Sizes per html[data-size].
    ===================================================================================== */
-.convo { --cf: 17px; --cb: 56px; --cw: 280px; --cm: 14px; --lw: 31vw; display: block; }
-:root[data-size="s"] .convo { --cf: 15px; --cb: 56px; --cw: 200px; --cm: 10px; --lw: 31vw; }
-:root[data-size="m"] .convo { --cf: 17px; --cb: 56px; --cw: 280px; --cm: 14px; --lw: 31vw; }
-:root[data-size="l"] .convo { --cf: 20px; --cb: 60px; --cw: 340px; --cm: 18px; --lw: 28vw; }
-:root[data-size="xl"] .convo { --cf: 24px; --cb: 68px; --cw: 420px; --cm: 24px; --lw: 24vw; }
+.convo { --cf: max(15px, calc(var(--u) * 1.2 + 6.5px)); --cb: max(56px, calc(var(--u) * 2.2 + 37px)); --cw: max(200px, calc(var(--u) * 26 + 50px)); --cm: calc(var(--u) * 1.5 + 1px); --lw: min(31vw, calc(var(--u) * 46)); display: block; }
 .convo > * { position: absolute; }
 .convo .cv-log {
   left: calc(var(--cm) + var(--safe-l)); top: calc(var(--cm) + var(--safe-t) + 64px); width: var(--lw); max-height: 34vh; overflow: hidden;
   display: flex; flex-direction: column; gap: 6px; mask-image: none; margin: 0; pointer-events: none;
 }
-:root[data-size="s"] .convo .cv-log { top: calc(var(--cm) + var(--safe-t) + 58px); }
 .convo .bubble { max-width: 100%; align-self: stretch; padding: 8px 12px; font-size: calc(var(--cf) * var(--ts)); line-height: 1.25; border-width: 3px; border-radius: 14px; }
 .convo .bubble.me { align-self: flex-end; max-width: 90%; font-size: calc(var(--cf) * .9 * var(--ts)); }
 .convo .cv-replies { right: calc(var(--cm) + var(--safe-r)); bottom: calc(var(--cm) + var(--safe-b)); width: var(--cw); display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
@@ -274,7 +269,7 @@ input[type=range] { height: max(32px, calc(var(--u) * 3.4)); }
 .convo :focus-visible, :root[data-focus-mode="key"] .convo :focus, :root[data-focus-mode="pad"] .convo :focus { outline-width: 3px; outline-offset: 2px; filter: drop-shadow(0 0 2px #fff); }
 .convo ~ .captions { left: auto; right: auto; }
 .captions { font-size: calc(var(--cf, 17px) * var(--ts)); }
-:root[data-size="s"] .captions { --cf: 14px; } :root[data-size="m"] .captions { --cf: 17px; } :root[data-size="l"] .captions { --cf: 20px; } :root[data-size="xl"] .captions { --cf: 24px; }
+:root .captions { --cf: max(14px, calc(var(--u) * 1.2 + 6.5px)); }
 :root .captions { padding: 6px 14px; max-width: min(46vw, 640px); border-radius: 12px; }
 /* in a conversation the replies/bar sit left+right, the middle bottom is free for captions */
 .convo ~ .captions { bottom: calc(var(--cf) * 1.2 + var(--safe-b)); top: auto; max-width: min(30vw, 520px); }

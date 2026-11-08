@@ -7,41 +7,10 @@ import { MARKET_BY_ID } from "../game/content/economy.ts";
 import { ADVISOR } from "../game/content/advisor.ts";
 import { sfx, speak, stopVoice } from "../audio/audio.ts";
 import { haptic } from "../platform/device.ts";
+import { vfx } from "../fx/vfx.ts";
 import { FoodIco, Ico } from "./icons.tsx";
 import { ITEM_EMOJI } from "./BudgetScroll.tsx";
 import "./budgetwin.css";
-
-// ---- tiny effect helpers (kept local and minimal so they can be swapped for src/fx/vfx.ts later) ----
-const SPARKS = ["#ffe27a", "#fff3b8", "#ffb347", "#ffffff"];
-/** Falling confetti bits inside the overlay. */
-function Confetti({ n = 22 }: { n?: number }) {
-  return (
-    <div className="bw-confetti" aria-hidden>
-      {Array.from({ length: n }, (_, i) => (
-        <i key={i} style={{ left: `${(i * 37) % 100}%`, background: SPARKS[i % 4], animationDelay: `${(i % 7) * 70}ms`, animationDuration: `${1300 + (i % 5) * 220}ms`, width: `calc(var(--u) * ${0.7 + (i % 3) * 0.3})` }} />
-      ))}
-    </div>
-  );
-}
-/** Coins fly from `from` to `to` (Web Animations). */
-function flyCoins(from: HTMLElement | null, to: HTMLElement | null, n: number, host: HTMLElement | null) {
-  if (!from || !to || !host) return;
-  const a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), h = host.getBoundingClientRect();
-  for (let i = 0; i < n; i++) {
-    const c = document.createElement("img");
-    c.src = "/ui/icons/coin.png"; c.className = "bw-flycoin"; c.alt = "";
-    host.appendChild(c);
-    const x0 = a.left + a.width / 2 - h.left, y0 = a.top + a.height / 2 - h.top;
-    const x1 = b.left + b.width / 2 - h.left, y1 = b.top + b.height / 2 - h.top;
-    const mx = (x0 + x1) / 2 + (i % 2 ? 1 : -1) * 30, my = Math.min(y0, y1) - 40;
-    const an = c.animate([
-      { transform: `translate(${x0}px,${y0}px) scale(.5)`, opacity: 0 },
-      { transform: `translate(${mx}px,${my}px) scale(1)`, opacity: 1, offset: 0.45 },
-      { transform: `translate(${x1}px,${y1}px) scale(.7)`, opacity: 1 },
-    ], { duration: 800, delay: i * 110, easing: "cubic-bezier(.4,0,.6,1)", fill: "both" });
-    an.onfinish = () => { c.remove(); sfx("coinIn", { volume: 0.35, rate: 1 + (i % 4) * 0.08 }); };
-  }
-}
 
 // hand-wobbled strike line (viewBox 0 0 100 12), differs per row
 const STRIKES = [
@@ -120,7 +89,9 @@ export default function BudgetWin() {
   }, [crossed, show3d]);
   const wasStamped = useRef(false);
   useEffect(() => {
-    if (stamped && !wasStamped.current) { wasStamped.current = true; sfx("stamp"); haptic("medium"); sfx(perfect ? "fanfare" : "good", { volume: 0.7 }); }
+    if (stamped && !wasStamped.current) { wasStamped.current = true; sfx("stamp"); haptic("medium"); sfx(perfect ? "fanfare" : "good", { volume: 0.7 });
+      vfx.burst("confetti", vfx.pct(30, 52), { n: perfect ? 40 : 24 }); vfx.burst("confetti", vfx.pct(70, 52), { n: perfect ? 40 : 24 });
+      if (perfect) vfx.burst("stars", vfx.pct(50, 40), { n: 18 }); }
   }, [stamped, perfect]);
 
   // reward: coins into the treasury chip, counter ticks up
@@ -132,7 +103,7 @@ export default function BudgetWin() {
   useEffect(() => {
     if (!rewarded || didReward.current) return;
     didReward.current = true; sfx("coinOut", { volume: 0.6 }); haptic("success");
-    flyCoins(bonusRef.current, chipRef.current, Math.min(win.bonus, 8), hostRef.current);
+    vfx.coinsTo(chipRef.current, Math.min(win.bonus, 8), bonusRef.current ? (() => { const r = bonusRef.current!.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })() : undefined);
     const step = Math.max(1, Math.ceil(win.bonus / 8));
     let g = win.goldBefore;
     const id = setInterval(() => { g = Math.min(win.goldAfter, g + step); setGold(g); if (g >= win.goldAfter) clearInterval(id); }, 110);
@@ -190,7 +161,6 @@ export default function BudgetWin() {
               </div>
             </div>
           </div>
-          {stamped && <Confetti n={perfect ? 34 : 14} />}
         </>
       )}
       <div className="bw-skip" aria-hidden>Tap to hurry · Esc skips</div>

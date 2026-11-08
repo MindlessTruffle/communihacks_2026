@@ -46,9 +46,6 @@
 .bw-reward li { display: flex; align-items: center; gap: calc(var(--u) * .7); font-size: calc(var(--u) * 2.1 * var(--ts)); padding: calc(var(--u) * .2) 0; font-family: var(--font-body); font-weight: 800; }
 .bw-reward img { width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); }
 .bw-reward b { color: #1f6a3d; font-family: var(--font-display); font-weight: 400; font-size: 1.15em; }
-.bw-flycoin { position: absolute; left: 0; top: 0; width: calc(var(--u) * 3); height: calc(var(--u) * 3); z-index: 5; pointer-events: none; }
-.bw-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.bw-confetti i { position: absolute; top: -4%; height: calc(var(--u) * 1.1); border-radius: 2px; animation: bwFall linear both; }
 body:has(.bw) .stats, body:has(.bw) .phase-dots, body:has(.bw) .corner-btn, body:has(.bw) .list-pin, body:has(.bw) .hint-pill, body:has(.bw) .joystick, body:has(.bw) .crosshair, body:has(.bw) .interact { visibility: hidden; }
 @keyframes bwFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes bwDrop { from { transform: translate(-50%, -150%); } to { transform: translate(-50%, 0); } }
@@ -56,4 +53,3 @@ body:has(.bw) .stats, body:has(.bw) .phase-dots, body:has(.bw) .corner-btn, body
 @keyframes bwStamp { 0% { transform: rotate(-14deg) scale(2.8); opacity: 0; } 60% { transform: rotate(-6deg) scale(.92); opacity: 1; } 100% { transform: rotate(-6deg) scale(1); opacity: 1; } }
 @keyframes bwQuill { from { left: 2%; transform: rotate(-8deg); } 50% { transform: rotate(6deg); } to { left: 88%; transform: rotate(-8deg); } }
 @keyframes bwPop { 0% { transform: translateY(0) scale(.3); opacity: 0; } 30% { opacity: 1; transform: translateY(-30%) scale(1.2); } 100% { transform: translateY(-120%) scale(.8); opacity: 0; } }
-@keyframes bwFall { from { transform: translateY(0) rotate(0); opacity: 1; } to { transform: translateY(110vh) rotate(540deg); opacity: .9; } }

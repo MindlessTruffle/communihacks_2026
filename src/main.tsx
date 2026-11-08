@@ -14,5 +14,5 @@ registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Debug handle for automated testing / handoff agents (read-only use recommended).
-import("./game/store.ts").then((m) => { (window as unknown as { __rc: unknown }).__rc = m.useGame; });
+// Debug handle for automated testing / handoff agents. Dev builds only (prod must not expose the store).
+if (import.meta.env.DEV) import("./game/store.ts").then((m) => { (window as unknown as { __rc: unknown }).__rc = m.useGame; });

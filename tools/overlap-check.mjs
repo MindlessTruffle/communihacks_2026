@@ -3,6 +3,7 @@
 // visible overlay panels/buttons that intersect (excluding ancestor/descendant) or leave the viewport.
 // The same `collect` function is what we paste into the Playwright MCP when playwright is not installed locally.
 import { chromium } from "playwright";
+import { pathToFileURL } from "node:url";
 
 export const SELECTOR = ".panel:not(.admin), .btn, .corner-btn, .thought, .stats, .phase-dots, .speech, .advisor-tip, .hint-pill, .item-pop, .list-pin, .wallet, .captions, .interact, .joystick, .item-tile, .toast";
 export function collect(selector) {
@@ -33,22 +34,24 @@ export function collect(selector) {
   return out;
 }
 
+async function main() {
 const URL_ = process.argv[2] || "http://localhost:5201";
-const SIZES = [[667, 375], [1024, 768], [1280, 720], [1920, 1080], [2560, 1440]];
-const admin = async (p, label) => { for (let i = 0; i < 4; i++) await p.keyboard.press("/"); await p.waitForTimeout(250); await p.getByRole("button", { name: label }).click(); await p.waitForTimeout(250); await p.getByRole("button", { name: "Close" }).click(); };
+// sizes: argv[3] "WxH,WxH" or env SIZES; default set below. Also run at in-between sizes (e.g. 800x500,1100x650,1366x768,1600x900,2560x1080,3840x2160).
+const SIZES = (process.argv[3] || process.env.SIZES || "667x375,1024x768,1280x720,1920x1080,2560x1440").split(",").map((s) => s.split("x").map(Number));
+const admin = async (p, label) => { await p.evaluate(() => { for (let i = 0; i < 4; i++) window.dispatchEvent(new KeyboardEvent("keydown", { key: "/" })); }); await p.waitForTimeout(250); await p.getByRole("button", { name: label }).click(); await p.waitForTimeout(250); await p.getByRole("button", { name: "Close" }).click(); };
 const ready = (p) => p.waitForFunction(() => !document.querySelector(".loading"), null, { timeout: 40000 }).catch(() => {});
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
 let bad = 0;
 for (const [W, H] of SIZES) {
-  const p = await (await browser.newContext({ viewport: { width: W, height: H } })).newPage();
-  const report = async (name) => { await p.waitForTimeout(700); const r = await p.evaluate(collect, SELECTOR); bad += r.length; console.log(`${W}x${H} ${name}: ${r.length ? "\n  " + r.join("\n  ") : "ok"}`); };
+  const ctx = await browser.newContext({ viewport: { width: W, height: H } }); await ctx.addInitScript(() => { try { localStorage.setItem("rc-intro-seen", "1"); } catch {} }); const p = await ctx.newPage(); p.setDefaultTimeout(150000);
+  const report = async (name) => { await p.waitForTimeout(700); if (process.env.SHOTS) await p.screenshot({ path: `${process.env.SHOTS}/${W}x${H}-${name}.png`, timeout: 120000 }).catch(() => {}); const r = await p.evaluate(collect, SELECTOR); bad += r.length; console.log(`${W}x${H} ${name}: ${r.length ? "\n  " + r.join("\n  ") : "ok"}`); };
   await p.goto(URL_); await p.waitForTimeout(1800);
   await p.getByText("START").first().click(); await p.waitForTimeout(3000); await report("setup");
   await p.getByText("Begin").click(); await p.waitForTimeout(400);
   for (let i = 0; i < 6 && (await p.locator(".tap-hint").count()); i++) { await p.mouse.click(W / 2, H / 2); await p.waitForTimeout(250); }
   await report("morning");
-  await p.getByText("Open the court").click(); await p.waitForTimeout(2500); await report("court-ask");
+  await p.getByText("Open the court").click(); await p.waitForTimeout(4500); await report("court-ask");
   await p.keyboard.press("y"); await p.waitForTimeout(1500); await report("court-reply");
   await p.keyboard.press("Space"); await p.waitForTimeout(1200); await report("court-advisor");
   await admin(p, "Skip court"); await p.waitForTimeout(800); await report("court-done");
@@ -63,3 +66,5 @@ for (const [W, H] of SIZES) {
 await browser.close();
 console.log(bad ? `\n${bad} issue(s)` : "\nno overlaps");
 process.exit(bad ? 1 : 0);
+}
+if (import.meta.url === pathToFileURL(process.argv[1]).href) main();

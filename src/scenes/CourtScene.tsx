@@ -15,7 +15,7 @@ import { KingdomDiorama } from "./Kingdom.tsx";
 import { sfx } from "../audio/audio.ts";
 import { useAnchors, intro, smoothProgress } from "./anchors.ts";
 import { HIGH, Lighting, PostFX } from "./look.tsx";
-import { Gallery, Prop, setGlow } from "./env.tsx";
+import { Gallery, Prop, brickMat, setGlow } from "./env.tsx";
 import { Flame, WindowShafts, useRugTexture } from "./fx.tsx";
 import { painterlyMaterial } from "./painterly.ts";
 import { Sparkles } from "@react-three/drei";
@@ -57,6 +57,29 @@ function profileFor(w: number, h: number): Profile {
 }
 const OWL_HEAD_Y = 4.0; // world y of the owl's head (perch bar 2.7 + owl)
 type ViewCam = THREE.PerspectiveCamera & { view: { offsetX: number; offsetY: number } };
+/**
+ * Brick continuing past the authored wall slab (x -16..16, y 0..10) so square / tall / ultrawide frames never see sky
+ * above or beside the wall. Same painterly brick material + planar UVs (x/4, y/4) so the bricks line up.
+ */
+function WallExtension({ z }: { z: number }) {
+  const geo = useMemo(() => {
+    const rects: [number, number, number, number][] = [[-80, 10, 80, 70], [-80, -1, -16, 10], [16, -1, 80, 10]]; // x0,y0,x1,y1
+    const pos: number[] = [], uv: number[] = [], col: number[] = [], idx: number[] = [];
+    rects.forEach(([x0, y0, x1, y1], r) => {
+      const b = r * 4;
+      for (const [x, y] of [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]) { pos.push(x, y, 0); uv.push(x / 4, y / 4); col.push(1, 1, 1); }
+      idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+    });
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+    g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  }, []);
+  return <mesh geometry={geo} material={brickMat} position={[0, 0, z - 0.02]} receiveShadow />;
+}
+
 export function frameCourt(w: number, h: number) {
   const cam = new THREE.PerspectiveCamera(30, w / h, 0.5, 1800) as ViewCam;
   const P = profileFor(w, h);
@@ -172,9 +195,9 @@ function CourtFx() {
     const dl = d?.outcome?.delta;
     if (d?.choice !== "yes" || !dl || dl.people + dl.happiness + dl.gold < 0) return;
     const head = { x: COURT.visitorStand, y: 1.5, z: COURT.visitorZ };
-    vfx.burst("confetti", head, { scale: 2.2, n: 30 });
-    vfx.burst("sparkle", head, { scale: 2.2, n: 8 });
-    if (dl.happiness > 0) vfx.burst("hearts", { ...head, y: head.y + 0.4 }, { scale: 2, n: 4 });
+    vfx.burst("confetti", head, { scale: 2.2, n: 34, size: 1.55 });
+    vfx.burst("sparkle", head, { scale: 2.2, n: 8, size: 1.4 });
+    if (dl.happiness > 0) vfx.burst("hearts", { ...head, y: head.y + 0.4 }, { scale: 2, n: 5, size: 1.55 });
   }), []);
   return null;
 }
@@ -402,6 +425,7 @@ export function CourtScene() {
       <PostFX preset={night ? "dusk" : "day"} />
 
       <Prop name="court_wall" position={[0, 0, COURT.wallZ]} />
+      <WallExtension z={COURT.wallZ} />
       <Prop name="court_trim" position={[0, 0, COURT.wallZ]} />
       {[2.9, 9.5].map((x) => <Prop key={x} name="sconce" position={[x, 4.4, COURT.wallZ + 0.1]} scale={1.5} cast={false} />)}
       {[2.9, 9.5].map((x) => <Flame key={x} position={[x, 4.95, COURT.wallZ + 1.0]} size={1.15} />)}

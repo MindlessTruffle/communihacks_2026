@@ -56,7 +56,7 @@ export function BudgetScroll() {
           ))}
         </div></div>
         <div className="footer">
-          <button className="btn gold" disabled={!market.list.length} onClick={() => { sfx("door"); haptic("medium"); speak(null, UI.marketHint); enter(); }}><Ico name="lantern" fallback="🏮" /> Enter the Night Market ▶</button>
+          <button className="btn gold hero" disabled={!market.list.length} onClick={() => { sfx("door"); haptic("medium"); speak(null, UI.marketHint); enter(); }}><Ico name="lantern" fallback="🏮" /> Enter the Night Market <span className="go">▶</span></button>
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ import { Halos } from "./fx.tsx";
 import { move, pollGamepadSticks } from "../platform/device.ts";
 import { sfx } from "../audio/audio.ts";
 import { vfx } from "../fx/vfx.ts";
-import { Vfx3D } from "../fx/Vfx3D.tsx";
+import { Vfx3D, IdleSparkle } from "../fx/Vfx3D.tsx";
 import { Grass, Lighting, PostFX, scatter, useGroundTexture } from "./look.tsx";
 
 export const useMarket = create<{ selected: string | null; nearCashier: boolean; set(p: Partial<{ selected: string | null; nearCashier: boolean }>): void }>((set) => ({
@@ -223,19 +223,33 @@ function FirstPerson({ onMoveTick }: { onMoveTick: (pos: THREE.Vector3) => void 
     const fwd = new THREE.Vector3(-Math.sin(yaw.current), 0, -Math.cos(yaw.current));
     const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
     const p = camera.position;
-    p.addScaledVector(fwd, f * speed * dt).addScaledVector(right, s * speed * dt);
+    const mvx = (fwd.x * f + right.x * s) * speed * dt, mvz = (fwd.z * f + right.z * s) * speed * dt;
+    p.x += mvx; p.z += mvz;
     p.x = THREE.MathUtils.clamp(p.x, -BOUNDS.x, BOUNDS.x);
     p.z = THREE.MathUtils.clamp(p.z, BOUNDS.zMin, BOUNDS.zMax);
     {
       // the fountain is solid: slide around it instead of walking through the basin
       const dx = p.x - FOUNTAIN.x, dz = p.z - FOUNTAIN.z, d = Math.hypot(dx, dz), min = FOUNTAIN.r + 0.3;
-      if (d < min && d > 1e-4) { p.x = FOUNTAIN.x + (dx / d) * min; p.z = FOUNTAIN.z + (dz / d) * min; }
+      if (d < min) {
+        const nx = d > 1e-4 ? dx / d : 0, nz = d > 1e-4 ? dz / d : 1;
+        // walking straight at the basin used to pin you against it (radial push-out has no sideways part): turn the blocked
+        // push into a slide round the rim, towards whichever side you are already on (right if dead centre)
+        const into = -(mvx * nx + mvz * nz);
+        if (into > 0) { const tx = -nz, tz = nx, side = Math.sign(mvx * tx + mvz * tz) || Math.sign(dx) || 1; p.x += tx * side * into * 1.1; p.z += tz * side * into * 1.1; }
+        const d2 = Math.hypot(p.x - FOUNTAIN.x, p.z - FOUNTAIN.z) || 1;
+        p.x = FOUNTAIN.x + ((p.x - FOUNTAIN.x) / d2) * min; p.z = FOUNTAIN.z + ((p.z - FOUNTAIN.z) / d2) * min;
+      }
     }
     const moving = Math.abs(f) + Math.abs(s) > 0.05;
     if (moving) {
       bob.current += dt * 9;
       stepAcc.current += dt;
-      if (stepAcc.current > 0.38) { stepAcc.current = 0; sfx("step", { volume: 0.3, rate: 0.9 + Math.random() * 0.2 }); { const sd = Math.random() < 0.5 ? -0.5 : 0.3; vfx.burst("dust", { x: p.x + fwd.x * 2.8 + right.x * sd * 2.4, y: 0.1, z: p.z + fwd.z * 2.8 + right.z * sd * 2.4 }, { n: 4, scale: 1.3 }); } }
+      if (stepAcc.current > 0.38) { stepAcc.current = 0; sfx("step", { volume: 0.3, rate: 0.9 + Math.random() * 0.2 }); {
+          // First person never sees its own feet, and the hint pill covers the ground closer than ~4 m. Kick the puffs up just beyond the pill's top
+          // edge (4.3-5 m ahead, either side of the aisle) so every step visibly stirs the cobbles.
+          const ahead = 4.3 + Math.random() * 0.7, sd = (Math.random() < 0.5 ? -1 : 1) * (0.7 + Math.random() * 1.1);
+          vfx.burst("dust", { x: p.x + fwd.x * ahead + right.x * sd, y: 0.12, z: p.z + fwd.z * ahead + right.z * sd }, { n: 5, scale: 1.0 });
+        } }
     }
     p.y = 1.55 + (reduce ? 0 : Math.sin(bob.current) * 0.035);
     camera.rotation.set(pitch.current, yaw.current, 0, "YXZ");
@@ -300,8 +314,11 @@ function Moon() {
 }
 
 
-/** Budget-win cutscene, 3D part: the ruler walks out of the market toward the camera carrying the basket, in warm lantern light. */
+/** Budget-win cutscene, 3D part: the ruler walks out of the market toward the camera carrying the basket, in warm lantern light.
+ *  Framing: the ruler grows from ~22% to ~40% of the screen height (dolly in + walk), basket hangs from the right hand part (hand_r). */
 const WIN_WALK_S = 2.6;
+const WIN_SCALE = 2.4;
+const BASKET_WORLD = 0.46; // world size of one basket model unit
 function WinShot() {
   const win = useGame((s) => s.win);
   const ruler = useGame((s) => s.run?.rulerModel) ?? "character-female-c";
@@ -318,28 +335,33 @@ function WinShot() {
     if (!win) return;
     const t = Math.min(1, (performance.now() - t0.current) / 1000 / WIN_WALK_S);
     const e = reduce ? 1 : 1 - Math.pow(1 - t, 2);
-    const z = -22.6 + e * 3.9;
+    const z = -22.4 + e * 2.9;
     if (who.current) who.current.position.set(0, 0, z);
     if (light.current) light.current.position.set(0.6, 2.6, z + 1.2);
-    camera.position.set(0.1 - t * 0.1, 1.0, -14.6 - t * 0.2);
-    camera.lookAt(0, 0.85, z - 0.6);
+    camera.position.set(0.05, 0.95, -17.1 + e * 0.9);
+    camera.lookAt(0, 0.66, z - 0.4);
   });
   if (!win) return null;
   const items = win.basket.slice(-6);
+  const ls = BASKET_WORLD / (0.44 * WIN_SCALE); // basket model unit -> hand_r local unit
   return (
     <>
       <pointLight ref={light} intensity={16} distance={9} decay={1.5} color="#ffc27a" />
-      <group ref={who} position={[0, 0, -22.6]}>
-        <Character url={`/kenney/mini-characters/${ruler}.glb`} anim="walk" scale={2} crown speed={0.9}>
-          <group position={[0.12, 0.34, 0.3]} rotation={[0.15, 0, 0]}>
-            <Model url="/models/basket.glb" scale={0.2} shadows={false} />
-            {items.map((id, i) => (
-              <Model key={i} url={MARKET_BY_ID[id].model} shadows={false}
-                position={[((i % 3) - 1) * 0.05, 0.07 + Math.floor(i / 3) * 0.04, (Math.floor(i / 3) % 2 - 0.5) * 0.04]}
-                scale={(MARKET_BY_ID[id].scale ?? 1) * 0.15} />
-            ))}
-          </group>
-        </Character>
+      <group ref={who} position={[0, 0, -22.4]}>
+        <Character url={`/kenney/mini-characters/${ruler}.glb`} anim="walk" scale={WIN_SCALE} crown speed={0.9} carry
+          handChildren={
+            // grip = the handle's top (y 0.71 in the basket model); the group counter-rotates the raised forearm so the basket hangs level
+            <group position={[0, -0.05, 0.02]} rotation={[0.95, 0, -0.18]} scale={ls}>
+              <group position={[0, -0.71, 0]}>
+                <Model url="/models/basket.glb" shadows={false} />
+                {items.map((id, i) => (
+                  <Model key={i} url={MARKET_BY_ID[id].model} shadows={false}
+                    position={[((i % 3) - 1) * 0.25, 0.35 + Math.floor(i / 3) * 0.2, (Math.floor(i / 3) % 2 - 0.5) * 0.2]}
+                    scale={(MARKET_BY_ID[id].scale ?? 1) * 0.75} />
+                ))}
+              </group>
+            </group>
+          } />
         <Sparkles count={26} scale={[2.4, 2.6, 2]} position={[0, 1.2, 0]} size={5} speed={0.5} color="#ffe9a0" />
       </group>
     </>
@@ -379,7 +401,7 @@ export default function MarketScene() {
   return (
     <>
       <FirstPerson onMoveTick={(p) => {
-        const near = p.distanceTo(new THREE.Vector3(CASHIER.x, p.y, CASHIER.z)) < 3.4;
+        const near = p.distanceTo(new THREE.Vector3(CASHIER.x, p.y, CASHIER.z)) < 4.4; // whole end of the aisle counts (zMin keeps you ~2.9 m from the counter)
         if (near !== useMarket.getState().nearCashier) setM({ nearCashier: near });
       }} />
       <Sky top="#171b50" bottom="#7a4f96" />
@@ -411,6 +433,7 @@ export default function MarketScene() {
         <Character url="/kenney/mini-characters/character-female-b.glb" anim="idle" position={[0, 0, -0.15]} scale={2} />
         <PriceTag text="PAY" position={new THREE.Vector3(0, 3.5, 0.6)} />
       </group>
+      <IdleSparkle at={[0, 2.6, CASHIER.z + 1.2]} every={2.2} spread={1.1} scale={1.3} size={1.3} />
       <Prop name="fountain" position={[FOUNTAIN.x, 0, FOUNTAIN.z]} scale={FOUNTAIN.scale} />
       <pointLight position={[0, 2.4, FOUNTAIN.z]} intensity={6} distance={7} color="#9fd8ff" />
 

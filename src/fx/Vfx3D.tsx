@@ -17,7 +17,7 @@ const PAL = {
   confetti: tint(["#ffcf4a", "#ff9a62", "#f27a9a", "#86d494", "#7fc6ea", "#b9a0f0", "#ffe9b0"]),
   gold: tint(["#ffd45a", "#ffbf3a", "#ffe58a"]),
   pink: tint(["#ff8fae", "#ff6f96", "#ffb3c6"]),
-  dust: tint(["#d9c39b", "#c9b088", "#e8d6b4"]),
+  dust: tint(["#fff0d2", "#fbe0b0", "#ffe9c2"]), // warm cream: lighter than the tan street path and the dark market earth, still warm
 };
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T,>(a: T[]) => a[(Math.random() * a.length) | 0];
@@ -108,17 +108,19 @@ export function Vfx3D({ slotPos }: Props) {
   const slotRef = useRef(slotPos); slotRef.current = slotPos;
 
   useEffect(() => {
+    let zs = 1; // per-burst particle SIZE multiplier (opts.size); spread/velocity stay governed by opts.scale
     const add = (cell: number, col: THREE.Color, x: number, y: number, z: number, vx: number, vy: number, vz: number, s0: number, s1: number, life: number, o: { grav?: number; drag?: number; alpha?: number; spin?: number; tent?: boolean; rot?: number } = {}) => {
       const i = sim.next; sim.next = (sim.next + 1) % N; // ring buffer: oldest recycled at the cap
       sim.pos[i * 3] = x; sim.pos[i * 3 + 1] = y; sim.pos[i * 3 + 2] = z;
       sim.vel[i * 3] = vx; sim.vel[i * 3 + 1] = vy; sim.vel[i * 3 + 2] = vz;
-      sim.s0[i] = s0; sim.s1[i] = s1; sim.life[i] = life; sim.age[i] = 0; sim.cell[i] = cell;
+      sim.s0[i] = s0 * zs; sim.s1[i] = s1 * zs; sim.life[i] = life; sim.age[i] = 0; sim.cell[i] = cell;
       sim.grav[i] = o.grav ?? 0; sim.drag[i] = o.drag ?? 0; sim.alpha[i] = o.alpha ?? 1; sim.spin[i] = o.spin ?? 0; sim.rot[i] = o.rot ?? 0; sim.tent[i] = o.tent ? 1 : 0;
       aCol.setXYZ(i, col.r, col.g, col.b); aCol.needsUpdate = true;
       sim.alive++;
     };
     const burst = (kind: VfxKind, x: number, y: number, z: number, o: VfxOpts) => {
       const sc = o.scale ?? 1, sp = o.spread ?? 0.12 * sc;
+      zs = o.size ?? 1;
       const cnt = (d: number) => Math.max(1, Math.round((o.n ?? d) * quality()));
       const j = () => rnd(-sp, sp);
       if (reduced()) { // one soft static glow, no travel
@@ -151,7 +153,7 @@ export function Vfx3D({ slotPos }: Props) {
         case "dust":
           for (let i = 0, n = cnt(5); i < n; i++) {
             const a = rnd(0, 6.283), r = rnd(0.25, 0.8) * sc;
-            add(CELL.blob, pick(PAL.dust), x + j(), y, z + j(), Math.cos(a) * r, rnd(0.2, 0.5) * sc, Math.sin(a) * r, rnd(0.1, 0.16) * sc, rnd(0.4, 0.6) * sc, rnd(0.6, 0.9), { drag: 2.4, alpha: 0.42 });
+            add(CELL.blob, pick(PAL.dust), x + j(), y, z + j(), Math.cos(a) * r, rnd(0.35, 0.8) * sc, Math.sin(a) * r, rnd(0.14, 0.22) * sc, rnd(0.55, 0.85) * sc, rnd(1.1, 1.6), { drag: 1.9, alpha: 0.8 });
           }
           break;
         case "ripple":
@@ -201,4 +203,19 @@ export function Vfx3D({ slotPos }: Props) {
   });
 
   return <mesh ref={meshRef} geometry={geo} material={mat} frustumCulled={false} renderOrder={999} visible={false} />;
+}
+
+/** Subtle idle twinkle on something interactable (door, gate, cashier). Needs a <Vfx3D /> in the scene. Silent under reduce motion.
+ *  `at` is a world position (or a getter, for things that move); a pair of tiny gold sparks every `every` seconds, offset at random by `spread`. */
+export function IdleSparkle({ at, every = 2.8, spread = 0.5, scale = 1, size = 1 }: { at: [number, number, number] | (() => [number, number, number]); every?: number; spread?: number; scale?: number; size?: number }) {
+  const acc = useRef(Math.random() * every);
+  useFrame((_, dt) => {
+    if (reduced()) return;
+    acc.current += Math.min(dt, 0.1);
+    if (acc.current < every) return;
+    acc.current = -Math.random() * every * 0.6; // jitter so neighbours don't pulse in unison
+    const p = typeof at === "function" ? at() : at;
+    vfx.burst("sparkle", { x: p[0] + rnd(-spread, spread), y: p[1] + rnd(-spread * 0.6, spread * 0.6), z: p[2] + rnd(-spread, spread) }, { n: 2, scale: 0.35 * scale, size: 1.2 * size, spread: 0.05 });
+  });
+  return null;
 }

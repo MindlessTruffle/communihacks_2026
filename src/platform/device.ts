@@ -7,6 +7,8 @@ export type OS = "ios" | "ipados" | "android" | "windows" | "mac" | "linux" | "c
 export interface Device {
   form: Form; input: InputKind; size: SizeClass; os: OS; standalone: boolean;
   dpr: 1 | 2 | 3; orientation: "landscape" | "portrait"; recommendedQuality: "high" | "low";
+  /** viewport CSS px (changes on every resize / zoom / rotate, so rc-device fires continuously while resizing) */
+  w: number; h: number;
 }
 
 const mq = (q: string) => (typeof window !== "undefined" ? window.matchMedia?.(q).matches ?? false : false);
@@ -46,19 +48,42 @@ function compute(): Device {
   const guess: InputKind = form !== "desktop" && navigator.maxTouchPoints > 0 && !(fine && hover) ? "touch" : coarse && !fine ? "touch" : "mouse";
   const input = lastInput ?? guess;
   const h = innerHeight;
+  const w = Math.round(innerWidth), hh = Math.round(innerHeight);
   const size: SizeClass = h <= 480 ? "s" : h <= 800 ? "m" : h <= 1200 ? "l" : "xl";
   const dpr = Math.max(1, Math.min(3, Math.round(devicePixelRatio || 1))) as 1 | 2 | 3;
   const cores = navigator.hardwareConcurrency ?? 4;
   const recommendedQuality = form === "phone" || (form === "tablet" && cores <= 6) ? "low" : "high";
   return {
     form, input, size, os, standalone: isStandalone(), dpr,
-    orientation: innerWidth >= innerHeight ? "landscape" : "portrait", recommendedQuality,
+    orientation: innerWidth >= innerHeight ? "landscape" : "portrait", recommendedQuality, w, h: hh,
   };
 }
 
 let cur: Device | null = null;
+
+/** Fluid UI unit (px per 1u): piecewise-linear in viewport height through hand-tuned anchors, extrapolated proportionally beyond both ends,
+ * then capped by width so narrow/odd windows (1000x1000, 4:3) keep cards on screen. Anchors = the old fixed per-bracket values. */
+type Anchors = [number, number][];
+const DAY_U: Anchors = [[300, 4.5], [375, 5.4], [390, 5.8], [480, 6.8], [720, 8.8], [1080, 12.5], [1440, 16]];
+const NIGHT_U: Anchors = [[300, 5.4], [375, 6.4], [400, 7], [480, 8.6], [720, 12], [1080, 17], [1440, 22]];
+function lerpAnchors(a: Anchors, h: number): number {
+  if (h <= a[0][0]) return a[0][1] * (h / a[0][0]);
+  for (let i = 1; i < a.length; i++) if (h <= a[i][0]) { const [h0, u0] = a[i - 1], [h1, u1] = a[i]; return u0 + ((u1 - u0) * (h - h0)) / (h1 - h0); }
+  const [hl, ul] = a[a.length - 1]; return ul * (h / hl); // beyond xl (4K, ultrawide): keep growing proportionally
+}
+export const unitFor = (h: number, w: number, night = false) => {
+  const raw = lerpAnchors(night ? NIGHT_U : DAY_U, h);
+  return Math.max(3.2, Math.min(raw, w / (night ? 100 : 128)));
+};
+function applyScale(n: { w: number; h: number }) {
+  const st = document.documentElement.style;
+  st.setProperty("--ud", unitFor(n.h, n.w).toFixed(2) + "px");
+  st.setProperty("--un", unitFor(n.h, n.w, true).toFixed(2) + "px");
+  st.setProperty("--vw", n.w + "px"); st.setProperty("--vh", n.h + "px");
+}
 function apply(n: Device) {
   const r = document.documentElement;
+  applyScale(n);
   r.dataset.form = n.form; r.dataset.input = n.input; r.dataset.size = n.size; r.dataset.dpr = String(n.dpr);
   r.dataset.os = n.os; r.dataset.orientation = n.orientation; r.dataset.standalone = String(n.standalone);
 }
@@ -76,9 +101,19 @@ export function noteInput(k: InputKind) { if (lastInput !== k) { lastInput = k; 
 
 export function startDeviceWatch() {
   refreshDevice();
-  const upd = () => { refreshDevice(); };
+  // coalesce resize storms into one update per frame; also covers zoom (inner size changes), rotate, visualViewport and DPR changes
+  let raf = 0;
+  const upd = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; refreshDevice(); }); };
   window.addEventListener("resize", upd);
   window.addEventListener("orientationchange", upd);
+  window.visualViewport?.addEventListener("resize", upd);
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(upd).observe(document.documentElement);
+  // DPR / browser-zoom change: a resolution media query only matches the current value, so re-arm it after every change
+  const armDpr = () => {
+    const m = window.matchMedia?.(`(resolution: ${window.devicePixelRatio}dppx)`);
+    m?.addEventListener?.("change", () => { upd(); armDpr(); }, { once: true });
+  };
+  armDpr();
   for (const q of ["(pointer: coarse)", "(pointer: fine)", "(hover: hover)", "(display-mode: standalone)"]) window.matchMedia?.(q).addEventListener?.("change", upd);
   window.addEventListener("pointerdown", (e) => noteInput(e.pointerType === "touch" ? "touch" : "mouse"), true);
   window.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") noteInput("mouse"); }, true);

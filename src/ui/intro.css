@@ -1,102 +1,142 @@
-/* "How to play" doodle intro (Intro.tsx). Fixed px per size bracket (--iu); text also multiplied by --ts. Layer: above toasts (60), below the phase veil (80). */
-.intro {
-  --iu: 9px;
+/* "How to play": a parchment scroll that unrolls, winds on per step, rolls up at the end (Intro.tsx).
+   Fluid: everything hangs off --iu (≈1.5vmin, clamped) and the scroll's own width/height; no size brackets. --ts (text size setting) multiplies text.
+   Layer: above toasts (60), below the phase veil (80). */
+.sc {
+  --iu: clamp(5px, 1.5vmin, 18px);
+  --ink: #2b2118;
+  --rod: calc(var(--iu) * 4.6);                                   /* roller thickness */
+  --W: min(96vw, 160vh, 1500px);                                  /* scroll width */
+  --H: min(calc(100dvh - var(--rod) * 2 - 7vh - var(--safe-b, 0px)), calc(var(--W) * .85)); /* open paper height */
   position: fixed; inset: 0; z-index: 70;
   display: grid; place-items: center;
-  background: rgba(43, 33, 24, .72);
+  background: rgba(43, 33, 24, .74);
   font-family: var(--font-body);
-  padding: calc(var(--iu) * 1) calc(var(--iu) * 1) calc(var(--iu) * 1 + var(--safe-b, 0px));
-  animation: in-fade .25s ease-out both;
+  animation: sc-fade .3s ease-out both;
 }
-:root[data-size="s"] .intro { --iu: 6px; }
-:root[data-size="m"] .intro { --iu: 9px; }
-:root[data-size="l"] .intro { --iu: 12.5px; }
-:root[data-size="xl"] .intro { --iu: 17px; }
-:root:not([data-size]) .intro { --iu: 9px; }
-@media (max-height: 480px) { :root:not([data-size]) .intro { --iu: 6px; } }
-@media (min-height: 801px) { :root:not([data-size]) .intro { --iu: 12.5px; } }
+.sc-wrap {
+  width: var(--W); height: calc(var(--H) + var(--rod) * 2);
+  display: flex; flex-direction: column; align-items: stretch;
+  position: relative;
+  filter: drop-shadow(calc(var(--iu) * .5) calc(var(--iu) * .8) 0 rgba(0, 0, 0, .32));
+}
 
-.in-card {
-  width: min(96vw, calc(var(--iu) * 80)); max-height: 100%;
-  display: flex; flex-direction: column; gap: calc(var(--iu) * .8);
-  padding: calc(var(--iu) * 1.2) calc(var(--iu) * 1.6) calc(var(--iu) * 1.4);
+/* ---- wooden rollers with a coil of paper on them ---- */
+.sc-rod { position: relative; height: var(--rod); flex: none; z-index: 3; }
+.sc-rod .coil {
+  position: absolute; inset: 0; border-radius: calc(var(--rod) / 2) / calc(var(--rod) / 2);
+  background: linear-gradient(180deg, #e9d6a3 0%, #f8edcb 30%, #f1e1b4 55%, #d2b87c 85%, #b99a5c 100%);
+  border: calc(var(--iu) * .34) solid var(--ink);
+  transition: transform .7s cubic-bezier(.5, 0, .3, 1);
+}
+.sc-rod.top .coil { transform-origin: 50% 100%; transform: scaleY(calc(1 + var(--step, 0) * .09)); }
+.sc-rod.bottom .coil { transform-origin: 50% 0; transform: scaleY(calc(1.18 - var(--step, 0) * .09)); }
+.sc-rod .peg {
+  position: absolute; top: 50%; width: calc(var(--rod) * .9); height: calc(var(--rod) * 1.18); transform: translateY(-50%);
+  background: radial-gradient(ellipse at 35% 30%, #d9a15a, #a8692d 55%, #6d4120);
+  border: calc(var(--iu) * .34) solid var(--ink);
+}
+.sc-rod .peg.l { left: calc(var(--rod) * -.75); border-radius: 55% 20% 20% 55% / 50% 20% 20% 50%; }
+.sc-rod .peg.r { right: calc(var(--rod) * -.75); border-radius: 20% 55% 55% 20% / 20% 50% 50% 20%; }
+.sc-pips { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: calc(var(--iu) * 1.2); z-index: 1; pointer-events: none; }
+.sc-pips b {
+  width: calc(var(--iu) * 1.5); height: calc(var(--iu) * 1.5); border-radius: 50%;
+  border: calc(var(--iu) * .26) solid var(--ink); background: transparent; transition: transform .3s, background .3s;
+}
+.sc-pips b.done { background: #a58a55; }
+.sc-pips b.on { background: #e6a817; transform: scale(1.35); }
+
+/* ---- the paper (height animates 0 -> H; content keeps its full size and is clipped) ---- */
+.sc-paper {
+  position: relative; flex: none; height: var(--H); margin-block: calc(var(--rod) * -.34); padding-block: calc(var(--rod) * .34);
+  display: flex; flex-direction: column; overflow: hidden; box-sizing: content-box;
+  width: 95%; align-self: center;
   background:
-    radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.55), transparent 55%),
-    #f6ebcf;
-  color: var(--ink);
-  border: calc(var(--iu) * .38) solid var(--ink);
-  border-radius: 2.2% 1.6% 2.4% 1.8% / 3.2% 2.4% 2.8% 2.2%;
-  box-shadow: calc(var(--iu) * .5) calc(var(--iu) * .7) 0 rgba(0, 0, 0, .35), inset 0 0 0 calc(var(--iu) * .25) #e4d4a8;
-  cursor: pointer; user-select: none; -webkit-user-select: none;
-  animation: in-card .4s cubic-bezier(.3, 1.4, .5, 1) both;
+    radial-gradient(ellipse at 25% 8%, rgba(255, 255, 255, .6), transparent 55%),
+    radial-gradient(ellipse at 85% 95%, rgba(150, 100, 40, .16), transparent 55%),
+    #f4e6c0;
+  color: var(--ink); cursor: pointer; user-select: none; -webkit-user-select: none;
+  animation: sc-open .95s cubic-bezier(.3, .7, .35, 1) both;
 }
-.in-head { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--iu) * 1); }
-.in-ollie { display: flex; align-items: center; gap: calc(var(--iu) * .8); font-family: var(--font-display); font-size: calc(var(--iu) * 2.1 * var(--ts, 1)); }
-.in-ollie .ico-img { width: calc(var(--iu) * 5.4); height: calc(var(--iu) * 5.4); object-fit: contain; animation: in-bob 2.6s ease-in-out infinite; transform-origin: 50% 90%; }
-.in-ollie.talk .ico-img { animation: in-talk .55s ease-in-out infinite; }
-.in-head-btns { display: flex; gap: calc(var(--iu) * .8); }
-
-.in-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: calc(var(--iu) * 1.6); align-items: center; min-height: 0; }
-.in-stage {
-  aspect-ratio: 200 / 140; border-radius: calc(var(--iu) * 1.2);
-  border: calc(var(--iu) * .3) solid var(--ink);
-  background: repeating-linear-gradient(0deg, transparent 0 calc(var(--iu) * 2.1), rgba(70, 120, 190, .16) calc(var(--iu) * 2.1) calc(var(--iu) * 2.2)), #fffaf0;
-  overflow: hidden; display: block;
+/* hand-inked, slightly wavy side edges */
+.sc-paper::before, .sc-paper::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: calc(var(--iu) * 1.8); z-index: 2; pointer-events: none;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 100' preserveAspectRatio='none'><path d='M7 0 Q5 10 7.4 22 T6.2 47 T7.6 71 T6 100' fill='none' stroke='%232b2118' stroke-width='3' vector-effect='non-scaling-stroke' stroke-linecap='round'/><path d='M7 0 Q5 10 7.4 22 T6.2 47 T7.6 71 T6 100 H0 V0Z' fill='%23c9ad72' fill-opacity='.45'/></svg>") 0 0 / 100% calc(var(--iu) * 30) repeat-y;
 }
-.in-stage svg { display: block; width: 100%; height: 100%; }
-.in-stage .lbl { font-family: var(--font-display); font-size: 13px; fill: var(--ink); }
-.in-stage .lbl.small { font-size: 10.5px; }
-.in-text { font-family: var(--font-display); font-size: calc(var(--iu) * 3 * var(--ts, 1)); line-height: 1.18; max-height: calc(var(--iu) * 24); overflow: auto; padding: calc(var(--iu) * .3); }
-.in-text p { margin: 0 0 calc(var(--iu) * .7); animation: in-line .45s ease-out calc(var(--i, 0) * .45s + .15s) both; }
-
-.in-foot { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--iu) * 1); cursor: default; }
-.in-dots { display: flex; gap: calc(var(--iu) * .9); align-items: center; }
-.in-dots i { width: calc(var(--iu) * 1.2); height: calc(var(--iu) * 1.2); border-radius: 50%; border: calc(var(--iu) * .25) solid var(--ink); background: transparent; transition: transform .2s; }
-.in-dots i.done { background: #b8a478; }
-.in-dots i.on { background: #e6a817; transform: scale(1.45); }
-
-.in-btn {
-  font-family: var(--font-display); font-size: calc(var(--iu) * 2.2 * var(--ts, 1)); color: var(--ink);
-  min-height: 44px; min-width: 44px; padding: 0 calc(var(--iu) * 1.8);
-  background: #fffaf0; border: calc(var(--iu) * .32) solid var(--ink);
-  border-radius: 1.2em 1em 1.3em 1em / 1em 1.2em 1em 1.3em;
-  box-shadow: 0 calc(var(--iu) * .4) 0 var(--ink); cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; gap: calc(var(--iu) * .6);
+.sc-paper::before { left: 0; }
+.sc-paper::after { right: 0; transform: scaleX(-1); }
+.sc-view { position: relative; flex: 1 1 0; min-height: 0; container-type: size; overflow: hidden; }
+/* cylinder shading where the paper curls onto the rollers */
+.sc-view::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 12%; z-index: 3; pointer-events: none; background: linear-gradient(rgba(90, 60, 25, .42), transparent); }
+.sc-reel {
+  position: absolute; left: 0; top: 0; width: 100%; height: 300%;
+  transform: translateY(calc(var(--step, 0) * -33.3333%));
+  transition: transform .7s cubic-bezier(.55, 0, .25, 1);
 }
-.in-btn:active { transform: translateY(calc(var(--iu) * .35)); box-shadow: 0 calc(var(--iu) * .05) 0 var(--ink); }
-.in-btn.go { background: linear-gradient(#ffd25a, #e6a817); min-width: calc(var(--iu) * 14); }
-.in-btn.small { font-size: calc(var(--iu) * 1.8 * var(--ts, 1)); min-height: 40px; padding: 0 calc(var(--iu) * 1.3); }
-.in-btn .ico-img { width: calc(var(--iu) * 2.8); height: calc(var(--iu) * 2.8); }
-.in-btn:focus-visible { outline: 3px solid #2f6fd6; outline-offset: 2px; }
 
-/* compact bracket: shorter buttons, hide the "Again" label (icon only) */
-:root[data-size="s"] .in-btn { min-height: 38px; }
-:root[data-size="s"] .in-btn.small { min-height: 34px; }
-:root[data-size="s"] .in-lbl { display: none; }
-:root[data-size="s"] .in-text { font-size: calc(var(--iu) * 3.1 * var(--ts, 1)); }
-:root[data-size="s"] .in-card { gap: calc(var(--iu) * .5); padding-block: calc(var(--iu) * .9); }
-:root[data-size="s"] .in-ollie .ico-img { width: calc(var(--iu) * 5); height: calc(var(--iu) * 5); }
+/* ---- a page: doodle + words (side by side when the paper is wide, stacked when it is tall) ---- */
+.sc-page { height: 33.3333%; display: grid; gap: calc(var(--iu) * 1.2); padding: calc(var(--iu) * 2.6) calc(var(--iu) * 3); box-sizing: border-box; align-items: center; grid-template-rows: minmax(0, 1fr) auto; }
+@container (min-aspect-ratio: 5/4) {
+  .sc-page { grid-template-rows: none; grid-template-columns: 1.1fr 1fr; gap: calc(var(--iu) * 2.4); }
+}
+.sc-stage { width: 100%; height: 100%; min-height: 0; min-width: 0; }
+.sc-stage svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.sc-stage .lbl { font-family: var(--font-display); font-size: 13px; fill: var(--ink); }
+.sc-stage .lbl.small { font-size: 11.5px; }
+.sc-text { font-family: var(--font-display); font-size: calc(var(--iu) * 4.3 * var(--ts, 1)); line-height: 1.16; text-align: center; min-height: 0; overflow: auto; }
+@container (min-aspect-ratio: 5/4) { .sc-text { text-align: left; } }
+.sc-text p { margin: 0 0 calc(var(--iu) * .9); opacity: 0; }
+.sc-page.go .sc-text p { animation: sc-line .5s ease-out calc(var(--i, 0) * .6s) both; }
 
-/* ---- doodle animation ---- */
-.intro svg .dr { stroke-dashoffset: 1; stroke-dasharray: 1 1; animation: in-draw var(--dur, .8s) ease-in-out var(--d, 0s) both; }
-.intro svg .dr[stroke-dasharray="0.04 0.05"] { stroke-dasharray: .04 .05; animation-name: in-draw-dots; }
-.intro svg .fl { animation: in-fadein .5s ease-out var(--d, 0s) both; }
-.intro svg .fade { animation: in-fadein .5s ease-out var(--d, 0s) both; }
-.intro svg .pop, .intro svg .drop, .intro svg .coin, .intro svg .door, .intro svg .twinkle { transform-box: fill-box; transform-origin: center; }
-.intro svg .pop { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both; }
-.intro svg .drop { animation: in-drop .8s cubic-bezier(.4, 0, .6, 1) var(--d, 0s) both; }
-.intro svg .coin { animation: in-coin .55s cubic-bezier(.5, 0, .8, .6) var(--d, 0s) both; }
-.intro svg .door { transform-origin: left center; animation: in-door .9s ease-in-out var(--d, 0s) both; }
-.intro svg .pen { animation: in-pen 4.8s ease-in-out both; }
-.intro svg .twinkle { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-twinkle 1.6s ease-in-out calc(var(--d, 0s) + .6s) infinite; }
-.intro svg .wig { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-wig 2.4s ease-in-out calc(var(--d, 0s) + .8s) infinite; }
-.intro svg .press { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-press 2.4s ease-in-out calc(var(--d, 0s) + 1s) infinite; }
-.intro svg .press2 { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-press 2.4s ease-in-out calc(var(--d, 0s) + 1.4s) infinite; }
-.intro svg .flame { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-flame .9s ease-in-out calc(var(--d, 0s) + .6s) infinite; }
-.intro svg .rays { animation: in-fadein .4s ease-out var(--d, 0s) both, in-twinkle 1.4s ease-in-out calc(var(--d, 0s) + .4s) infinite; transform-box: fill-box; transform-origin: center; }
-.intro svg .roll { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-wig 1.8s ease-in-out calc(var(--d, 0s) + .8s) infinite; }
-.intro svg .flag { transform-origin: 0 50%; animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-flag 1.2s ease-in-out calc(var(--d, 0s) + .6s) infinite; }
-.intro svg .dim { filter: grayscale(.35) opacity(.85); }
+/* ---- footer: Ollie, the ONE big button, a quiet Skip ---- */
+.sc-foot { flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: calc(var(--iu) * 1); padding: calc(var(--iu) * .6) calc(var(--iu) * 3) calc(var(--iu) * 1.6); position: relative; z-index: 3; }
+.sc-ollie { justify-self: start; }
+.sc-ollie .ico-img { width: calc(var(--iu) * 7); height: calc(var(--iu) * 7); object-fit: contain; display: block; transform-origin: 50% 90%; animation: sc-bob 2.6s ease-in-out infinite; }
+.sc-ollie.talk .ico-img { animation: sc-talk .55s ease-in-out infinite; }
+.sc-next {
+  font-family: var(--font-display); font-size: calc(var(--iu) * 4.6 * var(--ts, 1)); line-height: 1; color: var(--ink);
+  min-height: max(56px, calc(var(--iu) * 9)); min-width: calc(var(--iu) * 24); padding: 0 calc(var(--iu) * 4);
+  display: inline-flex; align-items: center; justify-content: center; gap: calc(var(--iu) * 1.2);
+  background: linear-gradient(#ffd25a, #e6a817);
+  border: calc(var(--iu) * .5) solid var(--ink); border-radius: 1.1em 0.9em 1.2em 1em / 1em 1.2em 0.9em 1.1em;
+  border-image: var(--fr-gold) var(--sl-gold) fill / calc(var(--iu) * 1.6) calc(var(--iu) * 1.9) calc(var(--iu) * 2.2) calc(var(--iu) * 1.9) stretch;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .55); cursor: pointer;
+  animation: sc-nudge 2.2s ease-in-out 2.5s infinite;
+}
+.sc-next span { font-size: .8em; }
+.sc-next:active { transform: translateY(calc(var(--iu) * .4)) scale(.98); }
+.sc-skip {
+  justify-self: end; background: none; border: 0; padding: calc(var(--iu) * 1) calc(var(--iu) * 1.2); min-height: 44px;
+  font-family: var(--font-body); font-weight: 700; font-size: calc(var(--iu) * 2 * var(--ts, 1)); color: var(--ink-soft, #5a4632);
+  text-decoration: underline; text-underline-offset: .2em; cursor: pointer; opacity: .85;
+}
+.sc-next:focus-visible, .sc-skip:focus-visible { outline: 3px solid #2f6fd6; outline-offset: 3px; }
+
+/* ---- unroll / roll up ---- */
+.sc.closing { animation: sc-fade-out .75s ease-in both; }
+.sc.closing .sc-paper { animation: sc-close .7s cubic-bezier(.6, 0, .6, 1) both; }
+@keyframes sc-open { from { height: 0; } to { height: var(--H); } }
+@keyframes sc-close { from { height: var(--H); } to { height: 0; } }
+@keyframes sc-fade { from { background-color: rgba(43, 33, 24, 0); } }
+@keyframes sc-fade-out { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes sc-line { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sc-nudge { 0%, 80%, 100% { transform: scale(1); } 88% { transform: scale(1.06) rotate(-1deg); } 94% { transform: scale(.98); } }
+@keyframes sc-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-3px) rotate(2deg); } }
+@keyframes sc-talk { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-4px) rotate(5deg); } }
+
+/* ---- doodle animation (kept from the card version) ---- */
+.sc svg .dr { stroke-dashoffset: 1; stroke-dasharray: 1 1; animation: in-draw var(--dur, .8s) ease-in-out var(--d, 0s) both; }
+.sc svg .dr[stroke-dasharray="0.04 0.05"] { stroke-dasharray: .04 .05; animation-name: in-draw-dots; }
+.sc svg .fl, .sc svg .fade { animation: in-fadein .5s ease-out var(--d, 0s) both; }
+.sc svg .pop, .sc svg .drop, .sc svg .coin, .sc svg .twinkle { transform-box: fill-box; transform-origin: center; }
+.sc svg .pop { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both; }
+.sc svg .drop { animation: in-drop .8s cubic-bezier(.4, 0, .6, 1) var(--d, 0s) both; }
+.sc svg .coin { animation: in-coin .55s cubic-bezier(.5, 0, .8, .6) var(--d, 0s) both; }
+.sc svg .pen { animation: in-pen 4.8s ease-in-out both; }
+.sc svg .twinkle { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-twinkle 1.6s ease-in-out calc(var(--d, 0s) + .6s) infinite; }
+.sc svg .wig { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-wig 2.4s ease-in-out calc(var(--d, 0s) + .8s) infinite; }
+.sc svg .press { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-press 2.4s ease-in-out calc(var(--d, 0s) + 1s) infinite; }
+.sc svg .press2 { animation: in-pop .6s cubic-bezier(.3, 1.8, .5, 1) var(--d, 0s) both, in-press 2.4s ease-in-out calc(var(--d, 0s) + 1.4s) infinite; }
+.sc svg .dim { filter: grayscale(.35) opacity(.85); }
 
 @keyframes in-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes in-draw-dots { from { opacity: 0; } to { opacity: 1; } }
@@ -104,26 +144,21 @@
 @keyframes in-pop { 0% { transform: scale(0) rotate(-14deg); opacity: 0; } 55% { opacity: 1; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
 @keyframes in-drop { 0% { transform: translateY(-70px); opacity: 0; } 15% { opacity: 1; } 60% { transform: translateY(4px); } 80% { transform: translateY(-5px); } 100% { transform: translateY(0); opacity: 1; } }
 @keyframes in-coin { 0% { transform: translateY(-90px); opacity: 0; } 20% { opacity: 1; } 80% { transform: translateY(0); } 90% { transform: translateY(-4px); } 100% { transform: translateY(0); opacity: 1; } }
-@keyframes in-door { from { transform: scaleX(1); } to { transform: scaleX(.18); } }
 @keyframes in-wig { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
 @keyframes in-twinkle { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.25) rotate(14deg); } }
 @keyframes in-press { 0%, 70%, 100% { transform: scale(1); } 80% { transform: scale(.86); } 90% { transform: scale(1.08); } }
-@keyframes in-flame { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(.9, 1.12); } }
-@keyframes in-flag { 0%, 100% { transform: skewY(0); } 50% { transform: skewY(8deg); } }
 @keyframes in-pen {
-  0% { transform: translate(70px, 30px); opacity: 0; } 18% { transform: translate(70px, 30px); opacity: 1; }
-  44% { transform: translate(36px, 40px); } 52% { transform: translate(45px, 35px); }
-  60% { transform: translate(36px, 68px); } 67% { transform: translate(45px, 63px); }
-  76% { transform: translate(36px, 96px); } 84% { transform: translate(45px, 91px); opacity: 1; }
-  100% { transform: translate(70px, 110px); opacity: 0; }
+  0% { transform: translate(60px, 30px); opacity: 0; } 18% { transform: translate(60px, 30px); opacity: 1; }
+  44% { transform: translate(26px, 40px); } 52% { transform: translate(35px, 35px); }
+  60% { transform: translate(26px, 68px); } 67% { transform: translate(35px, 63px); }
+  76% { transform: translate(26px, 96px); } 84% { transform: translate(35px, 91px); opacity: 1; }
+  100% { transform: translate(60px, 110px); opacity: 0; }
 }
-@keyframes in-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes in-card { from { transform: translateY(14px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes in-line { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes in-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-3px) rotate(2deg); } }
-@keyframes in-talk { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-4px) rotate(5deg); } }
 
-/* reduce motion: no wiggles, instant draws */
-.intro.rm, .intro.rm * { animation: none !important; transition: none !important; }
-.intro.rm svg .dr { stroke-dashoffset: 0; }
-.intro.rm svg .pen { display: none; }
+/* reduce motion: no unroll, no winding, no drawing; the scroll just fades in/out */
+.sc.rm, .sc.rm * { animation: none !important; transition: none !important; }
+.sc.rm { animation: in-fadein .25s ease-out both !important; }
+.sc.rm.closing { opacity: 0; transition: opacity .2s !important; }
+.sc.rm .sc-text p { opacity: 1; }
+.sc.rm svg .dr { stroke-dashoffset: 0; }
+.sc.rm svg .pen { display: none; }

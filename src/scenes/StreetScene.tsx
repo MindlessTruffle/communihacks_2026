@@ -15,7 +15,7 @@ import { painterlyMaterial } from "./painterly.ts";
 import { move, pollGamepadSticks, getDevice } from "../platform/device.ts";
 import { sfx } from "../audio/audio.ts";
 import { vfx } from "../fx/vfx.ts";
-import { Vfx3D } from "../fx/Vfx3D.tsx";
+import { Vfx3D, IdleSparkle } from "../fx/Vfx3D.tsx";
 import { Grass, HIGH, Lighting, PostFX, scatter, useGroundTexture } from "./look.tsx";
 
 export const CURVE = new THREE.CatmullRomCurve3([
@@ -231,10 +231,17 @@ function Scenery() {
           <pointLight position={[0, 1.8, d.d / 2 + 1.6]} intensity={7} distance={7} color="#ffb347" />
           <Sign label={DOORS.find((x) => x.id === d.id)!.icon} position={[0, 3.55, d.d / 2 + 0.55]} />
           <Prop name="banner_red" position={[2.0, 0, d.d / 2 + 0.7]} scale={0.9} />
+          <DoorSparkle d={d} />
         </group>
       ))}
     </>
   );
+}
+
+/** Idle twinkle around a minigame door (door-local offset -> world). */
+function DoorSparkle({ d }: { d: { x: number; z: number; rot: number; d: number } }) {
+  const lx = 0, ly = 1.5, lz = d.d / 2 + 0.9, c = Math.cos(d.rot), sn = Math.sin(d.rot);
+  return <IdleSparkle at={[d.x + lx * c + lz * sn, ly, d.z - lx * sn + lz * c]} every={3.2} spread={0.7} size={1.1} />;
 }
 
 function Sign({ label, position }: { label: string; position: [number, number, number] }) {
@@ -260,6 +267,7 @@ function Gate() {
       <Prop name="banner_green" position={[3.4 * k, 0, 1.6 * k]} scale={1.1} />
       <pointLight position={[0, 3.2, 2.2]} intensity={12} distance={11} color="#ffcf7a" />
       <Sign label="🏮" position={[0, 5.0 * k, 0.95 * k + 0.12]} />
+      <IdleSparkle at={[p.x + 0 * Math.cos(rot) + 2.2 * Math.sin(rot), 1.9, p.z + 2.2 * Math.cos(rot)]} every={2.4} spread={1.6} scale={1.4} size={1.3} />
     </group>
   );
 }
@@ -331,6 +339,7 @@ export default function StreetScene() {
   const lat = useRef(0);
   const [anim, setAnim] = useAnimState();
   const stepAcc = useRef(0);
+  const stepSide = useRef(1);
 
   useEffect(() => { tRef.current = 0; useStreet.getState().set({ t: 0, nearDoor: null, atGate: false }); }, [run.day]);
   useEffect(() => { setGlow(1.7); }, []);
@@ -364,7 +373,12 @@ export default function StreetScene() {
       pl.visible = !convo;
     }
     if (moving !== (anim === "walk")) setAnim(moving ? "walk" : "idle");
-    if (moving) { stepAcc.current += dt; if (stepAcc.current > 0.32) { stepAcc.current = 0; sfx("step", { volume: 0.35, rate: 0.9 + Math.random() * 0.2 }); if (pl) vfx.burst("dust", { x: pl.position.x, y: pl.position.y + 0.12, z: pl.position.z }, { n: 5, scale: 2.1 }); } }
+    if (moving) { stepAcc.current += dt; if (stepAcc.current > 0.32) { stepAcc.current = 0; sfx("step", { volume: 0.35, rate: 0.9 + Math.random() * 0.2 }); if (pl) {
+        // puffs kicked up beside and just ahead of the boots (the camera is behind the player and the hint pill covers the ground behind them),
+        // alternating left / right so the trail reads as steps; they rise above the pill's top edge as they grow
+        const hy = pl.rotation.y, fx = Math.sin(hy), fz = Math.cos(hy), side = stepSide.current = -stepSide.current;
+        vfx.burst("dust", { x: pl.position.x + fx * 0.25 + fz * 0.4 * side, y: pl.position.y + 0.2, z: pl.position.z + fz * 0.25 - fx * 0.4 * side }, { n: 5, scale: 1.7 });
+      } } }
 
     // reached a blocking NPC → start the conversation
     if (!frozen && nextBlock >= 0 && t >= blockT - 0.001) {

@@ -47,12 +47,12 @@ export default function StreetUI() {
     >
       {door && (
         <div className="interact">
-          <button className="btn gold" onClick={() => { sfx("door"); openMinigame(door.id); }}>{door.icon} Enter {door.label}</button>
+          <button className="btn gold hero" onClick={() => { sfx("door"); openMinigame(door.id); }}>{door.icon} Enter {door.label} <span className="go">▶</span></button>
         </div>
       )}
       {atGate && (
         <div className="interact">
-          <button className="btn gold" onClick={() => { sfx("door"); toBudget(); }}><Ico name="lantern" fallback="🏮" /> Go to the Night Market ▶</button>
+          <button className="btn gold hero" onClick={() => { sfx("door"); toBudget(); }}><Ico name="lantern" fallback="🏮" /> Go to the Night Market <span className="go">▶</span></button>
         </div>
       )}
       {!door && !atGate && <div className="hint-pill panel"><StreetHint /></div>}
