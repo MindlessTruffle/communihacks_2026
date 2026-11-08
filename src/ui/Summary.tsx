@@ -22,7 +22,8 @@ export function Summary() {
 
   const go = () => { stopVoice(); sfx("click"); speak("advisor", ADVISOR.evening); startEvening(); };
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === " " || e.key === "Enter") go(); };
+    const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return; if (e.key === " " || e.key === "Enter") go(); };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   });

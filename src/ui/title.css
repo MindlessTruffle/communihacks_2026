@@ -39,7 +39,9 @@
 .tt-start:enabled:hover { transform: translateY(-3px) scale(1.03); filter: drop-shadow(0 10px 24px rgba(255, 255, 255, .8)); }
 .tt-start:enabled:active { transform: translateY(2px) scale(.98); }
 .tt-start:focus-visible, .tt-link:focus-visible { outline: 3px solid #2c3a4e; outline-offset: 6px; }
-.tt-secondary { display: flex; gap: clamp(22px, 5vw, 56px); }
+.tt-secondary { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: clamp(18px, 4vw, 44px); max-width: 92vw; }
+.tt-notebook { display: inline-flex; align-items: center; gap: 9px; }
+.tt-notebook img { width: 32px; height: 32px; object-fit: contain; pointer-events: none; }
 .tt-link {
   background: none; border: 0; cursor: pointer; padding: 10px 6px; min-height: 44px;
   font-family: "Bodoni Moda", Georgia, serif; font-weight: 700; font-size: clamp(15px, 2.6vh, 22px); letter-spacing: .2em; text-transform: uppercase; color: #2c3a4e;

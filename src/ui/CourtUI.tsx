@@ -9,6 +9,7 @@ import { speak, stopVoice, sfx } from "../audio/audio.ts";
 import { haptic } from "../platform/device.ts";
 import { useAnchors } from "../scenes/anchors.ts";
 import { CoinIcon, Continue, EmoIco, Hint, Ico } from "./icons.tsx";
+import { useNotebook } from '../game/notebook.ts';
 
 /** Everything that must never be covered by the decision bubble (measured live, so it works at any size / text size). */
 const OBSTACLES = ".phase-dots, .corner-btn, .stats, .speech, .advisor-tip, .hint-pill, .captions, .wallet, .list-pin";
@@ -144,14 +145,16 @@ export function AdvisorTip({ text, real, wise, onNext }: { text: string; real?: 
 }
 
 export function CourtUI() {
+  const notebookOpen = useNotebook(s => s.open);
   const run = useGame((s) => s.run)!;
+  const anchor = useAnchors((s) => s.ruler);
   const step = useGame((s) => s.courtStep);
   const outcome = useGame((s) => s.outcome);
   const decide = useGame((s) => s.decide);
   const afterReply = useGame((s) => s.afterReply);
   const afterAdvisor = useGame((s) => s.afterAdvisor);
   const endCourt = useGame((s) => s.endCourt);
-  const anchor = useAnchors((s) => s.ruler);
+
   const [advisorLine, setAdvisorLine] = useState<{ text: string; real?: string; wise?: boolean } | null>(null);
   const greeted = useRef(0);
 
@@ -170,6 +173,7 @@ export function CourtUI() {
 
   // Voice for each step.
   useEffect(() => {
+    if (notebookOpen) return;
     if (step === "ask" && card) { setAdvisorLine(null); speak(card.who, card.ask); }
     if (step === "reply" && outcome) {
       let cancelled = false;
@@ -182,7 +186,7 @@ export function CourtUI() {
       speak("advisor", l.text).then(() => { if (useGame.getState().courtStep === "advisor") speak("advisor", l.realLife); });
     }
     if (step === "done") { speak("advisor", ADVISOR.courtDone); }
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, notebookOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const choose = useCallback((c: "yes" | "no") => {
     if (step !== "ask" || !card) return;
@@ -204,6 +208,7 @@ export function CourtUI() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return;
       const k = e.key.toLowerCase();
       if (k === "y" || k === "arrowleft") choose("yes");
       else if (k === "n" || k === "arrowright") choose("no");
@@ -223,20 +228,17 @@ export function CourtUI() {
           who={card.who}
           text={step === "ask" ? card.ask : outcome!.line}
           onReplay={() => speak(card.who, step === "ask" ? card.ask : outcome!.line)}
-                    extra={step === "ask" && (card.cost || card.orItem) ? (
-            <div className="cost">
-              {card.cost ? <><span style={{ width: "1.3em", height: "1.3em", display: "inline-block" }}><CoinIcon /></span>{card.cost}</> : null}
-              {card.orItem && (run.items[card.orItem] ?? 0) > 0 ? <span> or <EmoIco e={ITEMS[card.orItem]?.icon} /> {ITEMS[card.orItem]?.name}</span> : null}
-            </div>
-          ) : undefined}
         />
       )}
 
+      {/* Sort-the-Court style decision bubble beside the ruler (placement avoids HUD / king / owl / visitor),
+          with the gummy branch's price shown under Yes. */}
       {step === "ask" && card && (
         <DecisionBubble anchor={anchor}>
           <div className="choice">
             <button className="btn yes" onClick={() => choose("yes")} disabled={!yes?.ok} aria-label={`Yes: ${card.yesLabel ?? "Yes"}`} title={card.yesLabel ?? "Yes"}><Ico name="check" fallback="✓" /><Hint k="yes" /></button>
             <div className="lbl">{card.yesLabel ?? "Yes"}</div>
+            {(yes?.cost ?? card.cost) ? <div className="choice-price"><CoinIcon /> {yes?.cost ?? card.cost}</div> : null}
             {yes && !yes.ok && <div className="need">Need {yes.cost} <Ico name="coin" fallback="🪙" /></div>}
             {yes?.pay === "credit" && <div className="need"><Ico name="card" fallback="💳" /> card</div>}
             {yes?.pay === "item" && <div className="lbl">use <EmoIco e={ITEMS[card.orItem!]?.icon} /></div>}

@@ -6,6 +6,7 @@ import { GEM_COLORS, GEM_LABEL, GemIcon } from "./icons.tsx";
 import { GEMS } from "../game/types.ts";
 import { isTouch } from "../platform/device.ts";
 import { useDialog } from "../platform/a11y.tsx";
+import { useNotebook } from '../game/notebook.ts';
 
 // ------------------------------------------------------------------ small option widgets
 function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -156,6 +157,9 @@ function SettingsPanel({ tab }: { tab: TabId }) {
       )}
       {canFs && <Row icon="⛶" label="Full screen"><Toggle label="Full screen" on={fs} onChange={(v) => { if (v) document.documentElement.requestFullscreen?.({ navigationUI: "hide" } as FullscreenOptions).catch(() => {}); else document.exitFullscreen?.().catch(() => {}); }} /></Row>}
       <TextSizeRow s={s} set={setS} />
+      <Row icon="🧸" label="Character style" hint={(s.characterStyle ?? "gummy") === "gummy" ? "Soft gummy people (you can pick your colour)." : "Detailed storybook people."}>
+        <Seg label="Character style" value={s.characterStyle ?? "gummy"} options={[{ v: "gummy", label: "Gummy" }, { v: "midpoly", label: "Storybook" }]} onChange={(v) => setS({ characterStyle: v as "gummy" | "midpoly" })} />
+      </Row>
       <Row icon="🐌" label="Less motion" hint="Calmer animations and camera."><Toggle label="Less motion" on={s.reduceMotion} onChange={(v) => setS({ reduceMotion: v })} /></Row>
     </>
   );
@@ -278,6 +282,7 @@ function PauseCard({ day, setView, onClose }: { day?: number; setView: (v: "sett
           <button className="btn gold" data-autofocus onClick={() => { sfx("click"); onClose(); }}>▶ Keep playing</button>
           <button className="btn" onClick={() => { sfx("click"); setView("settings"); }}>⚙️ Options</button>
           <button className="btn" onClick={() => { sfx("click"); onClose(); import("./Intro.tsx").then((m) => m.openIntro()); }}>📖 How to play</button>
+          <button className="btn" onClick={() => { onClose(); useNotebook.getState().show(true); }}><img className="notebook-menu-icon" src="/ui/notebook-book.svg" alt="" />Notebook</button>
           {inRun && <button className="btn ghost" onClick={() => { sfx("click"); setView("quit"); }}>🏠 Title screen</button>}
         </div>
         <div className="tap-hint">{isTouch() ? "Your reign saves by itself." : "Press Esc to keep playing. Your reign saves by itself."}</div>

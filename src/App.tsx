@@ -17,6 +17,8 @@ import { haptic, setWalkMode, getDevice } from "./platform/device.ts";
 import { Ico } from "./ui/icons.tsx";
 import { Vfx2D } from "./fx/Vfx2D.tsx";
 import { Intro, useIntroGate } from "./ui/Intro.tsx";
+import { NotebookButton, Notebook } from './ui/Notebook.tsx';
+import { rememberRun, useNotebook } from './game/notebook.ts';
 
 // Heavy / rarely-needed pieces are split out: the ElevenLabs SDK only loads when a conversation opens.
 const Conversation = lazy(() => import("./convai/Conversation.tsx").then((m) => ({ default: m.Conversation })));
@@ -79,6 +81,10 @@ function SceneFor({ phase }: { phase: string }) {
 export default function App() {
   const phase = useGame((s) => s.phase);
   const settings = useGame((s) => s.settings);
+  const notebookOpen = useNotebook(s => s.open);
+  useEffect(() => { const saved = loadSave(); if (saved?.run) rememberRun(saved.run); }, []);
+  const run = useGame(s => s.run);
+  useEffect(() => { if (run) rememberRun(run); }, [run]);
   const convo = useGame((s) => !!s.convo);
   const minigame = useGame((s) => s.minigame);
   const runDay = useGame((s) => s.run?.day);
@@ -124,6 +130,7 @@ export default function App() {
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.repeat) return;
+      if (useNotebook.getState().open) { e.preventDefault(); e.stopImmediatePropagation(); useNotebook.getState().show(false); return; }
       if (menu || confirmNew !== null) { window.dispatchEvent(new CustomEvent("rc-back")); return; }
       if (useGame.getState().adminOpen) { useGame.getState().admin(false); return; }
       // these overlays handle Esc themselves (item card closes, cutscene skips)
@@ -181,9 +188,11 @@ export default function App() {
           {convo && <Conversation />}
           {showHud && <><Stats /><PhaseDots /></>}
           {showGear && <MenuButton onClick={() => setMenu(true)} />}
-          {!inGame && !menu && <button className="corner-btn title-gear" onClick={() => setMenu(true)} aria-label="Options"><Ico name="gear" fallback="⚙️" /></button>}
+          {!inGame && phase !== 'title' && !menu && <button className="corner-btn title-gear" onClick={() => setMenu(true)} aria-label="Options"><Ico name="gear" fallback="⚙️" /></button>}
           <Captions />
           <Intro />
+          {inGame && <NotebookButton />}
+          {notebookOpen && <Notebook />}
           {menu && <PauseMenu onClose={closeMenu} />}
           {confirmNew !== null && (
             <ConfirmDialog

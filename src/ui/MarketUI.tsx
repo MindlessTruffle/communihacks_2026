@@ -11,6 +11,7 @@ import { EmoIco, FoodIco, Hint, Ico, useInput } from "./icons.tsx";
 import { ITEM_EMOJI } from "./BudgetScroll.tsx";
 import BudgetWin from "./BudgetWin.tsx";
 import { vfx } from "../fx/vfx.ts";
+import { UnlockProgress } from './UnlockProgress.tsx';
 
 const sum = (ids: string[]) => ids.reduce((a, id) => a + (MARKET_BY_ID[id]?.price ?? 0), 0);
 
@@ -93,6 +94,7 @@ function ItemCard({ id }: { id: string }) {
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return;
       if (e.key === "Escape" || e.key === "n") close();
       else if (e.key === "Enter" || e.key === "y") take();
     };
@@ -137,7 +139,8 @@ function Checkout() {
 
   const go = () => { stopVoice(); sfx("click"); sleep(); };
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") go(); };
+    const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return; if (e.key === "Enter" || e.key === " ") go(); };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   });
@@ -147,10 +150,11 @@ function Checkout() {
     <div className="row"><span>{ok ? <Ico name="star" fallback="⭐" /> : "☆"}</span><span className={ok ? "pos" : "neu"}>{ok ? good : bad}</span></div>
   );
   return (
-    <div className="center">
-      <div className="card panel" role="dialog" aria-label={`Shopping done, ${r.stars} stars`}>
-        <div className="ribbon">Shopping done!</div>
-        <div style={{ fontSize: "calc(var(--u)*7)", letterSpacing: "calc(var(--u)*.6)", lineHeight: 1.2 }} aria-hidden>
+    <div className="center checkout-center">
+      <div className="card panel checkout-card" role="dialog" aria-label={`Shopping done, ${r.stars} stars`}>
+        <h2 className="checkout-title">Shopping done!</h2>
+        <div className="checkout-content">
+        <div style={{ fontSize: "clamp(32px, 5vw, 48px)", letterSpacing: "calc(var(--u)*.6)", lineHeight: 1.2 }} aria-hidden>
           {[0, 1, 2].map((i) => <span key={i} style={{ display: "inline-block", transition: "transform .3s", transform: shown > i ? "scale(1)" : "scale(.4)", opacity: shown > i ? 1 : 0.25 }}>{i < r.stars && shown > i ? <Ico name="star" fallback="⭐" /> : <span className="star-empty"><Ico name="star" fallback="☆" /></span>}</span>)}
         </div>
         <div className="rows">
@@ -164,7 +168,9 @@ function Checkout() {
         {r.missing.length > 0 && (
           <p className="small" style={{ fontWeight: 700 }}>The kingdom still needs: {r.missing.map((id) => `${ITEM_EMOJI[id] ?? ""} ${MARKET_BY_ID[id]?.name}`).join(", ")}</p>
         )}
-        <div className="footer"><button className="btn gold hero" autoFocus onClick={go}><Ico name="bed" fallback="🛏️" /> Go to sleep <span className="go">▶</span></button></div>
+        <UnlockProgress />
+        </div>
+        <div className="footer"><button className="btn gold hero" autoFocus onClick={go}><Ico name="bed" fallback="🛏️" /> Start day {(useGame.getState().run?.day ?? 0) + 1} <span className="go">▶</span></button></div>
       </div>
     </div>
   );
@@ -176,6 +182,8 @@ export default function MarketUI() {
   const win = useGame((s) => s.win);
   const selected = useMarket((s) => s.selected);
   const nearCashier = useMarket((s) => s.nearCashier);
+  const hasMoved = useMarket(s => s.hasMoved);
+  const pointerLocked = useMarket(s => s.pointerLocked);
   const touch = isTouch();
 
   const pay = () => { sfx("coinOut"); haptic("success"); useMarket.getState().set({ selected: null }); checkout(); };
@@ -184,7 +192,9 @@ export default function MarketUI() {
     if (nearCashier && !selected) sfx("sparkle", { volume: 0.5 });
   }, [nearCashier, selected]);
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (phase === "market" && nearCashier && !selected && (e.key === "Enter" || e.key === " ")) pay(); };
+    const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return;
+      if (phase === "market" && nearCashier && !selected && (e.key === "Enter" || e.key === " ")) pay(); };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   });
@@ -200,11 +210,12 @@ export default function MarketUI() {
       {!selected && nearCashier && (
         <div className="interact"><button className="btn gold hero" onClick={pay}><Ico name="purse" fallback="💰" /> Pay at the counter <Hint k="next" /></button></div>
       )}
-      {!selected && !nearCashier && (
-        <div className="hint-pill panel" style={touch ? { left: "auto", right: "calc(var(--u)*24)", transform: "none" } : undefined}>
+      {!selected && !nearCashier && !hasMoved && (
+        <div className="market-walk-hint">
           <MarketHint touch={touch} />
         </div>
       )}
+      {!touch && !selected && !pointerLocked && <button className="market-look-prompt" onClick={() => { document.querySelector('canvas')?.requestPointerLock?.()?.catch(() => {}); }}>Click to look around · Esc releases mouse</button>}
       {touch && <Joystick />}
     </div>
   );
@@ -214,6 +225,5 @@ function MarketHint({ touch }: { touch: boolean }) {
   const dev = useInput();
   if (dev === "gamepad") return <span className="hintrow"><Hint k="move" /> walk · <Hint k="next" /> pick up</span>;
   if (touch || dev === "touch") return <span className="hintrow"><Ico name="tap" fallback="🕹️" /> Stick to walk · drag to look · tap food</span>;
-  if (dev === "mouse") return <span className="hintrow"><Hint k="move" /> walk · drag to look · click food</span>;
-  return <>WASD to walk · drag to look · click food</>;
+  return <>WASD / arrows · Move</>;
 }

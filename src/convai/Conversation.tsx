@@ -13,6 +13,8 @@ import { AgentChat, agentsAvailable, type ChatMode } from "./session.ts";
 import { speak, sfx, stopVoice } from "../audio/audio.ts";
 import { haptic } from "../platform/device.ts";
 import { GEM_LABEL } from "../ui/icons.tsx";
+import { learningMemory, rememberChat, refreshNotebook, runId } from '../game/notebook.ts';
+import { cleanChat } from '../game/learning.ts';
 
 const QUICK = ["Hello! How are you?", "That sounds hard. Can I help?", "Thank you for telling me.", "Tell me more!"];
 
@@ -86,13 +88,19 @@ export function Conversation() {
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const awarded = useRef(0);
   const lid = useRef(0);
+  const transcript = useRef<{ who: string; text: string }[]>([]);
+  const flushChat = () => { if (transcript.current.length) { rememberChat(run, convo.npc, transcript.current); void refreshNotebook(runId(run)); } };
+  useEffect(() => () => flushChat(), []);
 
   const script = useMemo<ScriptedTalk>(() => {
     if (convo.npc === "advisor") return advisorScript(run, review, report ? reportToText(report) : "", report?.tips ?? [], report?.good ?? [], report?.bad ?? []);
     return SCRIPTED[convo.npc] ?? SCRIPTED.rosa;
   }, [convo.npc]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const push = (who: "npc" | "me", text: string) => setLines((l) => [...l.slice(-8), { who, text, id: ++lid.current }]);
+  const push = (who: "npc" | "me", text: string) => {
+    transcript.current = [...transcript.current.slice(-9), { who, text: cleanChat(text) }];
+    setLines((l) => [...l.slice(-8), { who, text, id: ++lid.current }]);
+  };
   const award = (gem: Gem, reason: string) => {
     if (awarded.current >= 6) return;
     awarded.current++;
@@ -118,9 +126,9 @@ export function Conversation() {
       const vars: Record<string, string> = {
         ruler_title: run.rulerTitle === "Ruler" ? "Your Majesty" : `${run.rulerTitle}`,
         day: String(run.day),
-        today_summary: todaySummary(run),
+        today_summary: `${todaySummary(run)} Learning notebook: ${learningMemory(run) || 'No notes yet.'}`,
         tomorrow_hint: tomorrowHint(run),
-        run_report: report ? reportToText(report) : "(none)",
+        run_report: `${report ? reportToText(report) : '(none)'}\nLearning notebook: ${learningMemory(run) || 'No notes yet.'}`,
       };
       const c = new AgentChat(convo.agent, ch.voiceId, vars, {
         onLine: (who, text) => push(who, text),
@@ -148,6 +156,7 @@ export function Conversation() {
     }
   };
   const end = () => {
+    flushChat();
     sfx("good"); haptic("medium");
     chat.current?.stop();
     stopVoice();

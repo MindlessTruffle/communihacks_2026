@@ -16,8 +16,9 @@ import { vfx } from "../fx/vfx.ts";
 import { Vfx3D, IdleSparkle } from "../fx/Vfx3D.tsx";
 import { Grass, Lighting, PostFX, scatter, useGroundTexture } from "./look.tsx";
 
-export const useMarket = create<{ selected: string | null; nearCashier: boolean; set(p: Partial<{ selected: string | null; nearCashier: boolean }>): void }>((set) => ({
-  selected: null, nearCashier: false, set: (p) => set(p),
+type MarketView = { selected: string | null; nearCashier: boolean; hasMoved: boolean; pointerLocked: boolean };
+export const useMarket = create<MarketView & { set(p: Partial<MarketView>): void }>((set) => ({
+  selected: null, nearCashier: false, hasMoved: false, pointerLocked: false, set: (p) => set(p),
 }));
 /** Joystick input written by the UI (−1..1). */
 export const joy = { x: 0, y: 0 };
@@ -180,7 +181,7 @@ function StringLights({ z }: { z: number }) {
 }
 
 function FirstPerson({ onMoveTick }: { onMoveTick: (pos: THREE.Vector3) => void }) {
-  const { camera, gl } = useThree();
+  const { camera, gl, events, setEvents } = useThree();
   const yaw = useRef(0);
   const pitch = useRef(-0.12);
   const drag = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -196,7 +197,13 @@ function FirstPerson({ onMoveTick }: { onMoveTick: (pos: THREE.Vector3) => void 
     camera.position.set(0, 1.55, 3.4);
     yaw.current = 0;
     const el = gl.domElement;
-    const down = (e: PointerEvent) => { drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY }; };
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') {
+        if (useGame.getState().phase === 'market' && !useMarket.getState().selected && !document.querySelector('[data-modal]')) el.requestPointerLock?.()?.catch(() => {});
+        return;
+      }
+      drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    };
     const mv = (e: PointerEvent) => {
       const d = drag.current;
       if (!d || d.id !== e.pointerId) return;
@@ -206,19 +213,38 @@ function FirstPerson({ onMoveTick }: { onMoveTick: (pos: THREE.Vector3) => void 
       d.x = e.clientX; d.y = e.clientY;
     };
     const up = (e: PointerEvent) => { if (drag.current?.id === e.pointerId) drag.current = null; };
+    const mouse = (e: MouseEvent) => {
+      if (document.pointerLockElement !== el || useMarket.getState().selected || document.querySelector('[data-modal]')) return;
+      yaw.current -= e.movementX * .0025;
+      pitch.current = THREE.MathUtils.clamp(pitch.current - e.movementY * .0025, -.9, .6);
+    };
+    const lockChanged = () => useMarket.getState().set({ pointerLocked: document.pointerLockElement === el });
+    const compute = events.compute;
+    setEvents({ compute: (event, state, previous) => {
+      if (document.pointerLockElement === el) { state.pointer.set(0, 0); state.raycaster.setFromCamera(state.pointer, state.camera); }
+      else compute?.(event, state, previous);
+    } });
+    document.addEventListener('mousemove', mouse);
+    document.addEventListener('pointerlockchange', lockChanged);
     el.addEventListener("pointerdown", down);
     window.addEventListener("pointermove", mv);
     window.addEventListener("pointerup", up);
-    return () => { el.removeEventListener("pointerdown", down); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
+    return () => {
+      if (document.pointerLockElement === el) document.exitPointerLock();
+      setEvents({ compute });
+      document.removeEventListener('mousemove', mouse); document.removeEventListener('pointerlockchange', lockChanged);
+      el.removeEventListener("pointerdown", down); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up);
+    };
   }, [camera, gl]);
 
   useFrame((_, dt) => {
     if (useGame.getState().win) return; // budget-win cutscene owns the camera
     pollGamepadSticks();
-    yaw.current -= move.lookX * dt * 2.2;
-    pitch.current = THREE.MathUtils.clamp(pitch.current - move.lookY * dt * 1.6, -0.9, 0.6);
-    const f = frozen ? 0 : THREE.MathUtils.clamp(move.y + joy.y, -1, 1);
-    const s = frozen ? 0 : THREE.MathUtils.clamp(move.x + joy.x, -1, 1);
+    const blocked = frozen || !!useMarket.getState().selected || !!document.querySelector('[data-modal]');
+    if (blocked && document.pointerLockElement === gl.domElement) document.exitPointerLock();
+    if (!blocked) { yaw.current -= move.lookX * dt * 2.2; pitch.current = THREE.MathUtils.clamp(pitch.current - move.lookY * dt * 1.6, -0.9, 0.6); }
+    const f = blocked ? 0 : THREE.MathUtils.clamp(move.y + joy.y, -1, 1);
+    const s = blocked ? 0 : THREE.MathUtils.clamp(move.x + joy.x, -1, 1);
     const speed = 3.0;
     const fwd = new THREE.Vector3(-Math.sin(yaw.current), 0, -Math.cos(yaw.current));
     const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
@@ -241,6 +267,7 @@ function FirstPerson({ onMoveTick }: { onMoveTick: (pos: THREE.Vector3) => void 
       }
     }
     const moving = Math.abs(f) + Math.abs(s) > 0.05;
+    if (moving && !useMarket.getState().hasMoved) useMarket.getState().set({ hasMoved: true });
     if (moving) {
       bob.current += dt * 9;
       stepAcc.current += dt;
@@ -388,13 +415,14 @@ export default function MarketScene() {
   // grass tufts in the strips beside the stalls and behind the houses
   const grass = useMemo(() => scatter(7000, -16, 16, -33, 8, (x) => Math.abs(x) > 6.1 && Math.abs(x) < 8.0 || Math.abs(x) > 13, 9), []);
 
-  useEffect(() => { setM({ selected: null, nearCashier: false }); setGlow(3.2); }, [setM]);
+  useEffect(() => { setM({ selected: null, nearCashier: false, hasMoved: false, pointerLocked: document.pointerLockElement === document.querySelector('canvas') }); setGlow(3.2); }, [setM]);
 
   const pick = (id: string, dist: number) => {
     if (phase !== "market") return;
     if (dist > 6.5) { sfx("hmm", { volume: 0.4 }); return; } // generous reach: tapping what you can see should work
     sfx("pop");
     const sp = slots.find((q) => q.id === id)?.pos; if (sp) vfx.burst("sparkle", sp, { n: 10, scale: 0.8 });
+    if (document.pointerLockElement) document.exitPointerLock();
     setM({ selected: id });
   };
 
@@ -430,7 +458,7 @@ export default function MarketScene() {
       {/* cashier at the end */}
       <group position={CASHIER.toArray()}>
         <Prop name="stall_teal" scale={1.1} />
-        <Character url="/kenney/mini-characters/character-female-b.glb" anim="idle" position={[0, 0, -0.15]} scale={2} />
+        <group name="MarketShopkeeper"><Character url="/models/chars/marlo.glb" anim="idle" position={[0, 0, 1.4]} scale={3.2} /></group>
         <PriceTag text="PAY" position={new THREE.Vector3(0, 3.5, 0.6)} />
       </group>
       <IdleSparkle at={[0, 2.6, CASHIER.z + 1.2]} every={2.2} spread={1.1} scale={1.3} size={1.3} />

@@ -10,6 +10,9 @@ import { ADVISOR } from "../game/content/advisor.ts";
 import { speak, sfx, unlockAudio, playMusic, stopVoice } from "../audio/audio.ts";
 import { goNative } from "../platform/device.ts";
 import type { RunState } from "../game/types.ts";
+import { GummyPortrait } from "../characters/gummy/GummyPortrait.tsx";
+import { GummyColors, GUMMY_PALETTE } from './GummyColors.tsx';
+import { useNotebook } from '../game/notebook.ts';
 
 // --- Title screen: ivory serif title over a painted cloud bank + three snowy peaks, ONE START button, quintic camera descent to the court. ---
 let descending = false;
@@ -30,15 +33,17 @@ export function Title() {
   const root = useRef<HTMLDivElement>(null);
   const [going, setGoing] = useState(false);
   const raf = useRef(0);
+  const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const done = useRef(false);
 
   const startRef = useRef<() => void>(() => {});
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if ((e.key === "Enter" || e.key === " ") && !(e.target as HTMLElement)?.closest?.("button")) { e.preventDefault(); startRef.current(); } };
+    const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return; if ((e.key === "Enter" || e.key === " ") && !(e.target as HTMLElement)?.closest?.("button")) { e.preventDefault(); startRef.current(); } };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, []);
-  useEffect(() => { intro.progress = 0; descending = false; return () => { cancelAnimationFrame(raf.current); descending = false; titleEsc.skip = null; }; }, []);
+  useEffect(() => { intro.progress = 0; descending = false; return () => { cancelAnimationFrame(raf.current); clearTimeout(fadeTimer.current); descending = false; titleEsc.skip = null; }; }, []);
 
   const finish = () => {
     if (done.current) return;
@@ -56,17 +61,19 @@ export function Title() {
     if (reduce) { // ~180 ms crossfade, no camera travel
       intro.progress = 1;
       set("--fade", "0");
-      window.setTimeout(finish, FADE_MS);
+      fadeTimer.current = setTimeout(finish, FADE_MS);
       return;
     }
-    const t0 = performance.now();
+    let previous = performance.now(), elapsed = 0;
     const tick = (now: number) => {
-      const t = Math.min(1, (now - t0) / DESCENT_MS);
+      // Don't skip the whole descent when one expensive render stalls a frame.
+      elapsed += Math.min(64, Math.max(0, now - previous)); previous = now;
+      const t = Math.min(1, elapsed / DESCENT_MS);
       intro.progress = t;
       const p = smoothProgress(t);
-      set("--cloud-back", `${-p * 118}vh`); set("--cloud-front", `${-p * 160}vh`);
+      set("--cloud-back", `${p * 80}vh`); set("--cloud-front", `${p * 110}vh`);
       set("--fade", String(Math.max(0, 1 - p * 5)));       // title + button fade out in the first fifth
-      set("--veil", String(Math.max(0, (p - 0.55) * 2.2))); // cloud-white wash through the middle of the fall
+      set("--veil", String(Math.sin(Math.PI * t) ** 4 * .92)); // pass through a cloud, then reveal the court
       if (t >= 1) finish(); else raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
@@ -82,12 +89,11 @@ export function Title() {
         <h1 className="tt-title"><span>Royal</span><span>Concerns</span></h1>
         <div className="tt-actions">
           <button className="tt-start" onClick={start} disabled={going} aria-label="Start"><span>Start</span></button>
-          {hasSave && (
             <div className="tt-secondary">
-              <button className="tt-link" disabled={going} onClick={() => { unlockAudio(); goNative(); sfx("click"); cont(); }}>Continue</button>
+              {hasSave && <button className="tt-link" disabled={going} onClick={() => { unlockAudio(); goNative(); sfx("click"); cont(); }}>Continue</button>}
+              <button className="tt-link tt-notebook" disabled={going} onClick={() => useNotebook.getState().show(true)}><img src="/ui/notebook-book.svg" alt="" draggable={false} /><span>Notebook</span></button>
               <button className="tt-link" disabled={going} onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))}>Options</button>
             </div>
-          )}
         </div>
       </div>
       <div className="tt-veil" aria-hidden="true" />
@@ -99,6 +105,8 @@ export function Setup() {
   const newGame = useGame((s) => s.newGame);
   const [title, setTitle] = useState<RunState["rulerTitle"]>("Ruler");
   const [model, setModel] = useState(RULER_MODELS[0].id);
+  const [color, setColor] = useState<string>(GUMMY_PALETTE[0][1]);
+  useEffect(() => { useGame.getState().setPreviewColor(color); useGame.getState().setPreviewRuler(model); }, [color, model]);
   const [step, setStep] = useState(0);
   const intro = ADVISOR.intro;
 
@@ -108,7 +116,7 @@ export function Setup() {
       <div className="center" onClick={() => {
         stopVoice(); sfx("page");
         if (i + 1 < intro.length) { setStep(step + 1); speak("advisor", intro[i + 1]); }
-        else newGame({ title, model, name: "" });
+        else newGame({ title, model, color, name: "" });
       }}>
         <div className="card panel">
           <div className="ribbon"><Ico name="owl" fallback="🦉" /> Sage Ollie</div>
@@ -121,17 +129,18 @@ export function Setup() {
 
   return (
     <div className="center" style={{ background: "transparent" }}>
-      <div className="card panel" style={{ width: "calc(var(--u)*62)", marginLeft: "calc(var(--u)*12)" }}>
-        <div className="ribbon">Who will rule?</div>
-        <div className="pick" role="radiogroup" aria-label="Choose your ruler" style={{ flexWrap: "nowrap", gap: "calc(var(--u)*.8)" }}>
+      <div className="card panel ruler-setup" style={{ width: "calc(var(--u)*62)" }}>
+        <h2 className="setup-title">Who will rule?</h2>
+        <div className="pick" role="radiogroup" aria-label="Choose your ruler" style={{ flexWrap: "wrap", gap: "calc(var(--u)*.8)" }}>
           {RULER_MODELS.map((m) => (
             <button key={m.id} className={"btn ghost opt " + (model === m.id ? "on" : "")} style={{ minWidth: "calc(var(--u)*7)", height: "calc(var(--u)*8.6)", padding: 0 }}
               aria-checked={model === m.id} aria-label={`Ruler ${m.label}`} role="radio" onClick={() => { sfx("tap"); setModel(m.id); useGame.getState().setPreviewRuler(m.id); }}>
-              <img src={`/ui/chars/${m.id}.png`} alt="" style={{ height: "100%", pointerEvents: "none" }} />
+              <GummyPortrait id={m.id} color={model === m.id ? color : undefined} />
             </button>
           ))}
         </div>
-        <p className="med display" style={{ marginTop: "calc(var(--u)*2.4)" }}>{UI.chooseTitle}</p>
+        <GummyColors color={color} onChange={setColor} />
+        <p className="med display" style={{ marginTop: "calc(var(--u)*1)" }}>{UI.chooseTitle}</p>
         <div className="pick" role="radiogroup">
           {(["King", "Queen", "Ruler"] as const).map((t) => (
             <button key={t} className={"btn opt " + (title === t ? "on" : "")} role="radio" aria-checked={title === t}

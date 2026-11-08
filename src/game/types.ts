@@ -133,9 +133,11 @@ export interface DayStats {
 }
 
 export interface RunState {
+  runId?: string;
   seed: number;
   rulerTitle: "King" | "Queen" | "Ruler";
   rulerModel: string;
+  rulerColor?: string;
   rulerName: string;
   day: number;
   people: number;

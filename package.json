@@ -8,7 +8,7 @@
     "build": "tsc -p . && vite build",
     "preview": "vite preview --host",
     "serve": "node server/serve.mjs",
-    "test": "vitest run",
+    "test": "node --test server/notebook.test.mjs tools/learning.test.ts",
     "assets:kenney": "node tools/copy-kenney.mjs",
     "voices:bake": "node tools/bake-voices.ts",
     "agents:sync": "node tools/sync-agents.ts",

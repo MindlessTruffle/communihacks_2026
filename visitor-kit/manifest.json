@@ -1,0 +1,1103 @@
+{
+  "version": 1,
+  "coordinateSystem": {
+    "up": "+Y",
+    "forward": "+Z",
+    "units": "meters",
+    "origin": "ground centered"
+  },
+  "sizes": {
+    "small": 0.85,
+    "medium": 1,
+    "large": 1.15
+  },
+  "colors": {
+    "red": "#E95764",
+    "blue": "#4AB5EE",
+    "mint": "#70D3AA",
+    "lavender": "#B299E5",
+    "orange": "#F3A057",
+    "yellow": "#F3D46D"
+  },
+  "bodies": {
+    "tall": {
+      "node": "Body_tall",
+      "root": "Character_tall",
+      "eyesNode": "Eyes_tall",
+      "height": 2.4,
+      "width": 1.162274,
+      "faceWidth": 0.595,
+      "headWidth": 0.7982,
+      "anchors": {
+        "HeadTop": {
+          "node": "Anchor_tall_HeadTop",
+          "position": [
+            0,
+            2.32,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Face": {
+          "node": "Anchor_tall_Face",
+          "position": [
+            0,
+            1.968,
+            0.416426
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Eyewear": {
+          "node": "Anchor_tall_Eyewear",
+          "position": [
+            0,
+            1.968,
+            0.461426
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Neck": {
+          "node": "Anchor_tall_Neck",
+          "position": [
+            0,
+            1.488,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Waist": {
+          "node": "Anchor_tall_Waist",
+          "position": [
+            0,
+            0.912,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "chubby": {
+      "node": "Body_chubby",
+      "root": "Character_chubby",
+      "eyesNode": "Eyes_chubby",
+      "height": 2.0,
+      "width": 1.658171,
+      "faceWidth": 0.64,
+      "headWidth": 0.882378,
+      "anchors": {
+        "HeadTop": {
+          "node": "Anchor_chubby_HeadTop",
+          "position": [
+            0,
+            1.92,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Face": {
+          "node": "Anchor_chubby_Face",
+          "position": [
+            0,
+            1.51,
+            0.513364
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Eyewear": {
+          "node": "Anchor_chubby_Eyewear",
+          "position": [
+            0,
+            1.51,
+            0.558364
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Neck": {
+          "node": "Anchor_chubby_Neck",
+          "position": [
+            0,
+            1.24,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Waist": {
+          "node": "Anchor_chubby_Waist",
+          "position": [
+            0,
+            0.76,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  },
+  "parts": {
+    "head_crown": {
+      "slot": "head",
+      "anchor": "HeadTop",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "head_crown__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "head_crown__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": true
+    },
+    "head_cap": {
+      "slot": "head",
+      "anchor": "HeadTop",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "head_cap__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "head_cap__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "head_beret": {
+      "slot": "head",
+      "anchor": "HeadTop",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "head_beret__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "head_beret__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "head_wizard": {
+      "slot": "head",
+      "anchor": "HeadTop",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "head_wizard__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "head_wizard__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "head_tuft": {
+      "slot": "head",
+      "anchor": "HeadTop",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "head_tuft__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "head_tuft__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "eyewear_round": {
+      "slot": "eyewear",
+      "anchor": "Eyewear",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "eyewear_round__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "eyewear_round__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "eyewear_square": {
+      "slot": "eyewear",
+      "anchor": "Eyewear",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "eyewear_square__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "eyewear_square__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "eyewear_monocle": {
+      "slot": "eyewear",
+      "anchor": "Eyewear",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "eyewear_monocle__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "eyewear_monocle__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "face_smile": {
+      "slot": "face",
+      "anchor": "Face",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "face_smile__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "face_smile__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "face_moustache": {
+      "slot": "face",
+      "anchor": "Face",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "face_moustache__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "face_moustache__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "face_freckles": {
+      "slot": "face",
+      "anchor": "Face",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "face_freckles__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "face_freckles__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "clothing_collar": {
+      "slot": "clothing",
+      "anchor": "Waist",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "clothing_collar__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "clothing_collar__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "clothing_cape": {
+      "slot": "clothing",
+      "anchor": "Waist",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "clothing_cape__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "clothing_cape__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "clothing_apron": {
+      "slot": "clothing",
+      "anchor": "Waist",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "clothing_apron__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "clothing_apron__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    },
+    "clothing_belt": {
+      "slot": "clothing",
+      "anchor": "Waist",
+      "compatibleBodies": [
+        "tall",
+        "chubby"
+      ],
+      "variants": {
+        "tall": {
+          "node": "clothing_belt__tall",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        "chubby": {
+          "node": "clothing_belt__chubby",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "rulerOnly": false
+    }
+  },
+  "eyes": {
+    "oval": {
+      "frames": [
+        {
+          "offset": [
+            0.00390625,
+            0.7578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.00390625,
+            0.5078125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.00390625,
+            0.2578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        }
+      ]
+    },
+    "round": {
+      "frames": [
+        {
+          "offset": [
+            0.12890625,
+            0.7578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.12890625,
+            0.5078125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.12890625,
+            0.2578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        }
+      ]
+    },
+    "relaxed": {
+      "frames": [
+        {
+          "offset": [
+            0.25390625,
+            0.7578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.25390625,
+            0.5078125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.25390625,
+            0.2578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        }
+      ]
+    },
+    "cheerful": {
+      "frames": [
+        {
+          "offset": [
+            0.37890625,
+            0.7578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.37890625,
+            0.5078125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.37890625,
+            0.2578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        }
+      ]
+    },
+    "stern": {
+      "frames": [
+        {
+          "offset": [
+            0.50390625,
+            0.7578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.50390625,
+            0.5078125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        },
+        {
+          "offset": [
+            0.50390625,
+            0.2578125
+          ],
+          "repeat": [
+            0.1171875,
+            0.234375
+          ]
+        }
+      ]
+    }
+  },
+  "slots": {
+    "head": "HeadTop",
+    "eyewear": "Eyewear",
+    "face": "Face",
+    "clothing": "Waist"
+  },
+  "randomDefaults": {
+    "allowCrown": false
+  },
+  "textures": {
+    "eyes": "textures/eyes_styles_blink.png",
+    "palette": "textures/cosmetics_palette.png"
+  },
+  "blink": {
+    "frames": [
+      0,
+      1,
+      2
+    ],
+    "automaticTiming": false
+  },
+  "budgets": {
+    "targetTriangles": 2500,
+    "targetDraws": 6,
+    "worstCase": {
+      "tall": {
+        "triangles": 2442,
+        "draws": 6,
+        "slotMaxima": {
+          "head": 960,
+          "eyewear": 388,
+          "face": 264,
+          "clothing": 318
+        }
+      },
+      "chubby": {
+        "triangles": 2442,
+        "draws": 6,
+        "slotMaxima": {
+          "head": 960,
+          "eyewear": 388,
+          "face": 264,
+          "clothing": 318
+        }
+      }
+    }
+  },
+  "source": "Derived copies; source court unchanged."
+}
