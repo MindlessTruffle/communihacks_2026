@@ -99,6 +99,17 @@ the sibling `royal-concerns` folder. The gummy edition began on local branch
 
 ## Where to continue
 
+### Main-branch integration
+
+- Reconciled the separate game and original main histories. Retained the playable
+  game entry point, dependency configuration, styles, and character integration.
+- Preserved the original intro's unique source, documentation, and assets. Its
+  README is archived as `docs/legacy-intro-readme.md`; the root README now explains
+  the playable game. Combined environment-file ignore rules protect local keys.
+- Performed the integration in a separate worktree, preserving the original
+  walkaround checkout and its three local commits.
+
+
 ### Project key badges for Yes/No choices
 
 - Use the existing `public/ui/icons/keysmall.png` artwork for Y/N badges,

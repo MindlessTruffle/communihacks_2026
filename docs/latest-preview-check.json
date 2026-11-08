@@ -1,0 +1,21 @@
+{
+  "events": [
+    {
+      "phase": "descending",
+      "elapsed": 0,
+      "reducedMotion": false
+    },
+    {
+      "phase": "court",
+      "elapsed": 2776.6000000089407,
+      "reducedMotion": false
+    }
+  ],
+  "sceneStats": {
+    "meshesBefore": 569,
+    "drawGroupsAfter": 75,
+    "instancedObjects": 504
+  },
+  "heading": "Hilltop Courtroom\nDay 1",
+  "browserErrors": []
+}

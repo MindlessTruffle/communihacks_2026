@@ -2,6 +2,10 @@ node_modules
 dist
 .env
 .env.local
+.env.*
+!.env.example
+*.blend2
+.DS_Store
 *.log
 _kenney_raw/*.zip
 _kenney_raw/cj.txt
