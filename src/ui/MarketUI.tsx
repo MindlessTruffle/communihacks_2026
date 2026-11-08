@@ -92,6 +92,7 @@ function ItemCard({ id }: { id: string }) {
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return;
       if (e.key === "Escape" || e.key === "n") close();
       else if (e.key === "Enter" || e.key === "y") take();
     };
@@ -134,7 +135,8 @@ function Checkout() {
 
   const go = () => { stopVoice(); sfx("click"); sleep(); };
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") go(); };
+    const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return; if (e.key === "Enter" || e.key === " ") go(); };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   });
@@ -182,7 +184,8 @@ export default function MarketUI() {
     if (nearCashier && !selected) sfx("sparkle", { volume: 0.5 });
   }, [nearCashier, selected]);
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (nearCashier && !selected && (e.key === "Enter" || e.key === " ")) pay(); };
+    const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return; if (nearCashier && !selected && (e.key === "Enter" || e.key === " ")) pay(); };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   });

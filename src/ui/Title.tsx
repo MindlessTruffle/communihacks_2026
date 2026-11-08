@@ -36,7 +36,8 @@ export function Title() {
 
   const startRef = useRef<() => void>(() => {});
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if ((e.key === "Enter" || e.key === " ") && !(e.target as HTMLElement)?.closest?.("button")) { e.preventDefault(); startRef.current(); } };
+    const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return; if ((e.key === "Enter" || e.key === " ") && !(e.target as HTMLElement)?.closest?.("button")) { e.preventDefault(); startRef.current(); } };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, []);

@@ -133,6 +133,7 @@ export interface DayStats {
 }
 
 export interface RunState {
+  runId?: string;
   seed: number;
   rulerTitle: "King" | "Queen" | "Ruler";
   rulerModel: string;

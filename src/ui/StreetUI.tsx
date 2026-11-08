@@ -35,6 +35,7 @@ export default function StreetUI() {
   useEffect(() => { if (door) sfx("sparkle", { volume: 0.5 }); }, [door]);
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return;
       if (e.repeat || (e.target instanceof HTMLElement && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return;
       if (e.key.toLowerCase() === "e" && !convo && !minigame) {
         e.preventDefault(); interactWithCitizen(); return;

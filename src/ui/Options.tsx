@@ -6,6 +6,7 @@ import { GEM_COLORS, GEM_LABEL, GemIcon } from "./icons.tsx";
 import { GEMS } from "../game/types.ts";
 import { isTouch } from "../platform/device.ts";
 import { useDialog } from "../platform/a11y.tsx";
+import { useNotebook } from '../game/notebook.ts';
 
 // ------------------------------------------------------------------ small option widgets
 function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -277,6 +278,7 @@ function PauseCard({ day, setView, onClose }: { day?: number; setView: (v: "sett
         <div className="pause-btns">
           <button className="btn gold" data-autofocus onClick={() => { sfx("click"); onClose(); }}>▶ Keep playing</button>
           <button className="btn" onClick={() => { sfx("click"); setView("settings"); }}>⚙️ Options</button>
+          <button className="btn" onClick={() => { onClose(); useNotebook.getState().show(true); }}>Misc. · My notebook</button>
           {inRun && <button className="btn ghost" onClick={() => { sfx("click"); setView("quit"); }}>🏠 Title screen</button>}
         </div>
         <div className="tap-hint">{isTouch() ? "Your reign saves by itself." : "Press Esc to keep playing. Your reign saves by itself."}</div>

@@ -4,6 +4,7 @@ import type { Gem, Phase, RunState } from "./types.ts";
 import * as sim from "./sim/sim.ts";
 import { CHARACTERS } from "./content/characters.ts";
 import { MARKET_BY_ID, UNLOCKS } from "./content/economy.ts";
+import { rememberRun, rememberEvent, refreshNotebook, runId } from './notebook.ts';
 
 export interface Settings {
   readAloud: boolean;
@@ -171,9 +172,13 @@ export const useGame = create<Store>((set, get) => ({
   emit(kind, data) { set({ fx: { id: ++fxId, kind, data } }); },
 
   newGame(o) {
+    const previous = get().run;
+    if (previous) rememberRun(previous, true);
     const run = sim.newRun({ title: o.title, model: o.model, name: o.name });
+    run.runId = crypto.randomUUID();
     if (o.color && /^#[0-9a-f]{6}$/i.test(o.color)) run.rulerColor = o.color;
     set({ run, report: null });
+    rememberRun(run);
     get().beginDay();
   },
   continueGame() {
@@ -182,6 +187,7 @@ export const useGame = create<Store>((set, get) => ({
     const resume: Phase = s.phase === "court" || s.phase === "morning" ? s.phase : s.phase === "summary" ? "summary" : "street";
     set({ run: s.run, phase: resume, courtStep: "enter", outcome: null, morning: s.phase === "morning" ? { lines: [], newUnlocks: [] } : null });
     if (resume === "street") get().startEvening();
+    rememberRun(s.run);
   },
   goto(p) {
     set({ phase: p });
@@ -214,7 +220,10 @@ export const useGame = create<Store>((set, get) => ({
   setTreasury(open) { set({ treasuryOpen: open }); },
   treasury(a) {
     const r = sim.treasury(get().run!, a);
-    if (r.ok) { set({ run: r.state }); save(r.state, get().phase); }
+    if (r.ok) {
+      set({ run: r.state }); save(r.state, get().phase);
+      rememberEvent(r.state, { id: `treasury:${crypto.randomUUID()}`, day: r.state.day, kind: 'note', concept: 'planning', text: 'You used a money tool.', tip: 'Check your coins before your next choice.' });
+    }
     return { ok: r.ok, msg: r.msg };
   },
 
@@ -227,6 +236,7 @@ export const useGame = create<Store>((set, get) => ({
     set({ run: state, outcome: { ...outcome, cardId: card.id, choice }, courtStep: "reply" });
     get().emit("decision", { choice, outcome });
     save(state, "court");
+    rememberRun(state);
   },
   afterReply() {
     const o = get().outcome;
@@ -248,13 +258,18 @@ export const useGame = create<Store>((set, get) => ({
   closeConvo() {
     const c = get().convo;
     if (!c) return;
+    const run = get().run;
+    if (run) void refreshNotebook(runId(run));
     if (c.mode === "review") { set({ convo: null }); get().finishReview(); return; }
     set((st) => ({ convo: null, street: { ...st.street, done: [...st.street.done, c.npc] } }));
   },
   kindness(gem) {
     const run = get().run;
     if (!run) return;
-    set({ run: sim.addKindness(run, gem) });
+    const next = sim.addKindness(run, gem);
+    set({ run: next });
+    save(next, get().phase);
+    rememberEvent(next, { id: `kindness:${next.kindnessTotal}`, day: next.day, kind: 'good', concept: 'kindness', text: 'You showed kindness in a conversation.', tip: 'Keep listening and offering help.' });
     get().emit("kindness", gem);
   },
   openMinigame(id) { set({ minigame: id }); },
@@ -263,6 +278,7 @@ export const useGame = create<Store>((set, get) => ({
     const next = { ...run, gold: run.gold + gold };
     set((st) => ({ minigame: null, run: next, street: { ...st.street, games: [...st.street.games, id] } }));
     save(next, "street");
+    rememberEvent(next, { id: `game:${next.day}:${id}`, day: next.day, kind: 'note', concept: id === 'compare' ? 'compare-prices' : 'planning', text: 'You finished a practice game.', tip: 'Take your time. You can practise again.' });
     if (gold > 0) get().emit("coins", gold);
   },
 
@@ -283,6 +299,13 @@ export const useGame = create<Store>((set, get) => ({
     const { run, market } = get();
     const { state, result } = sim.applyMarket(run!, market.basket, market.list, market.budget);
     set({ run: state, market: { ...market, result }, phase: "checkout" });
+    for (const [key, ok, text, tip] of [
+      ['list', result.listDone, result.listDone ? 'You bought everything on your list.' : 'Your list still had things to buy.', 'Buy what is on your list first.'],
+      ['budget', result.underBudget, result.underBudget ? 'You stayed inside your shopping budget.' : 'You spent more than your shopping budget.', 'Check the total before you pay.'],
+      ['sales', result.trapsAvoided, result.trapsAvoided ? 'You skipped the shiny sale items.' : 'You bought a shiny sale item.', 'Pause. Check if it is on your list.'],
+    ] as const) rememberEvent(state, { id: `market:${state.day}:${key}`, day: state.day, kind: ok ? 'good' : 'practice', concept: key === 'budget' ? 'budgeting' : 'needs-wants', text, tip });
+    save(state, 'checkout');
+    void refreshNotebook(runId(state));
   },
   sleep() {
     const run = sim.endDay(get().run!);
@@ -295,6 +318,8 @@ export const useGame = create<Store>((set, get) => ({
     let run = get().run!;
     if (!run.lost) run = sim.forceLoss(run, reason ?? "The kingdom needs a rest.");
     const report = sim.reignReport(run);
+    rememberRun(run, true);
+    void refreshNotebook(runId(run));
     set({ run, report, phase: "reign-review", convo: { npc: "advisor", agent: "advisor_review", mode: "review" },
       minigame: null, adminOpen: false, treasuryOpen: false, morning: null });
     save(null, "title");

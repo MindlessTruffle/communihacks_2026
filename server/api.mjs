@@ -2,6 +2,7 @@
 // Keeps the ElevenLabs key on the server: browser only ever gets short-lived conversation tokens.
 import fs from "node:fs";
 import path from "node:path";
+import { interpretNotebook, validPayload } from './notebook.mjs';
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -45,7 +46,19 @@ export async function handleApi(req, res) {
   const key = process.env.ELEVENLABS_API_KEY;
 
   if (url.pathname === "/api/health") {
-    send(res, 200, { voiceAgents: !!key && Object.keys(agents()).length > 0 });
+    send(res, 200, { voiceAgents: !!key && Object.keys(agents()).length > 0, notebook: !!process.env.OPENROUTER_API_KEY });
+    return true;
+  }
+
+  if (url.pathname === '/api/notebook') {
+    if (req.method !== 'POST') { send(res, 405, { error: 'method-not-allowed' }); return true; }
+    if (limited((req.socket?.remoteAddress || '?') + ':notebook')) { send(res, 429, { error: 'rate-limited' }); return true; }
+    let body = '';
+    for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body) > 64000) { send(res, 413, { error: 'too-large' }); return true; } }
+    let payload; try { payload = JSON.parse(body); } catch { send(res, 400, { error: 'bad-json' }); return true; }
+    if (!validPayload(payload)) { send(res, 400, { error: 'bad-input' }); return true; }
+    try { const result = await interpretNotebook(payload); send(res, 200, result ?? { source: 'saved', reflection: null }); }
+    catch { send(res, 200, { source: 'saved', reflection: null }); }
     return true;
   }
 

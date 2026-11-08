@@ -133,6 +133,7 @@ function Visitor({ charId, mode, reaction, onArrive, onLeft }: {
   useEffect(() => { sfx("door", { volume: 0.5 }); }, []);
 
   useFrame((_, dt) => {
+    if (document.querySelector('.notebook')) return;
     const speed = reduce ? 6 : 3.2;
     if (mode === "enter" || (mode === "stand" && !arrived.current)) {
       x.current = Math.max(COURT.visitorStand, x.current - dt * speed);

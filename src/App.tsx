@@ -15,6 +15,8 @@ import { playMusic, preloadSfx, suspendAudio } from "./audio/audio.ts";
 import { Captions, LiveRegion, useApplySettings, useInputMode } from "./platform/a11y.tsx";
 import { haptic, setWalkMode, getDevice } from "./platform/device.ts";
 import { Ico } from "./ui/icons.tsx";
+import { MiscButton, Notebook } from './ui/Notebook.tsx';
+import { rememberRun, useNotebook } from './game/notebook.ts';
 
 // Heavy / rarely-needed pieces are split out: the ElevenLabs SDK only loads when a conversation opens.
 const Conversation = lazy(() => import("./convai/Conversation.tsx").then((m) => ({ default: m.Conversation })));
@@ -75,6 +77,10 @@ function SceneFor({ phase }: { phase: string }) {
 export default function App() {
   const phase = useGame((s) => s.phase);
   const settings = useGame((s) => s.settings);
+  const notebookOpen = useNotebook(s => s.open);
+  useEffect(() => { const saved = loadSave(); if (saved?.run) rememberRun(saved.run); }, []);
+  const run = useGame(s => s.run);
+  useEffect(() => { if (run) rememberRun(run); }, [run]);
   const convo = useGame((s) => !!s.convo);
   const minigame = useGame((s) => s.minigame);
   const [menu, setMenu] = useState(false);
@@ -118,6 +124,7 @@ export default function App() {
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.repeat) return;
+      if (useNotebook.getState().open) { e.preventDefault(); e.stopImmediatePropagation(); useNotebook.getState().show(false); return; }
       if (menu || confirmNew !== null) { window.dispatchEvent(new CustomEvent("rc-back")); return; }
       if (useGame.getState().adminOpen) { useGame.getState().admin(false); return; }
       if (document.querySelector(".item-pop")) return; // market item card closes itself on Esc
@@ -175,6 +182,8 @@ export default function App() {
           {showGear && <MenuButton onClick={() => setMenu(true)} />}
           {!inGame && !menu && <button className="corner-btn title-gear" onClick={() => setMenu(true)} aria-label="Options"><Ico name="gear" fallback="⚙️" /></button>}
           <Captions />
+          <MiscButton />
+          {notebookOpen && <Notebook />}
           {menu && <PauseMenu onClose={closeMenu} />}
           {confirmNew !== null && (
             <ConfirmDialog

@@ -14,6 +14,7 @@ import { Props, Prop, rng, setGlow, useSandTexture, usePainterly, type EnvName, 
 import { Shaft, Halos } from "./fx.tsx";
 import { painterlyMaterial } from "./painterly.ts";
 import { DustPuffs } from "../characters/gummy/DustPuffs.ts";
+import { useNotebook } from '../game/notebook.ts';
 import { move, pollGamepadSticks, getDevice } from "../platform/device.ts";
 import { sfx } from "../audio/audio.ts";
 import { Grass, HIGH, Lighting, PostFX, scatter, useGroundTexture } from "./look.tsx";
@@ -40,6 +41,7 @@ export const useStreet = create<StreetProximity & { set(p: Partial<StreetProximi
 export const walkInput = { hold: false };
 
 export function interactWithCitizen() {
+  if (useNotebook.getState().open) return;
   const state = useGame.getState(), npc = useStreet.getState().nearNpc;
   if (!npc || state.phase !== "street" || state.convo || state.minigame || state.street.done.includes(npc)) return;
   walkInput.hold = false;
@@ -397,7 +399,7 @@ export default function StreetScene() {
   useFrame(({ camera }, rawDelta) => {
     const dt = Math.min(rawDelta, .1);
     pollGamepadSticks();
-    const frozen = !!convo || !!minigame || phase !== "street";
+    const frozen = !!convo || !!minigame || phase !== "street" || useNotebook.getState().open;
     const fwd = frozen ? 0 : Math.max(-1, Math.min(1, move.y + (walkInput.hold ? 1 : 0)));
     let t = tRef.current;
     if (fwd) t = THREE.MathUtils.clamp(t + (fwd * SPEED * dt) / LEN, 0, Math.min(1, blockT));

@@ -9,6 +9,7 @@ import { speak, stopVoice, sfx } from "../audio/audio.ts";
 import { haptic } from "../platform/device.ts";
 import { useAnchors } from "../scenes/anchors.ts";
 import { CoinIcon, Continue, EmoIco, Hint, Ico } from "./icons.tsx";
+import { useNotebook } from '../game/notebook.ts';
 
 export function SpeechPanel({ who, text, extra, onReplay, tag }: { who: string; text: string; extra?: React.ReactNode; onReplay?: () => void; tag?: string }) {
   const ch = CHARACTERS[who];
@@ -92,6 +93,7 @@ export function AdvisorTip({ text, real, wise, onNext }: { text: string; real?: 
 }
 
 export function CourtUI() {
+  const notebookOpen = useNotebook(s => s.open);
   const run = useGame((s) => s.run)!;
   const step = useGame((s) => s.courtStep);
   const outcome = useGame((s) => s.outcome);
@@ -118,6 +120,7 @@ export function CourtUI() {
 
   // Voice for each step.
   useEffect(() => {
+    if (notebookOpen) return;
     if (step === "ask" && card) { setAdvisorLine(null); speak(card.who, card.ask); }
     if (step === "reply" && outcome) {
       let cancelled = false;
@@ -130,7 +133,7 @@ export function CourtUI() {
       speak("advisor", l.text).then(() => { if (useGame.getState().courtStep === "advisor") speak("advisor", l.realLife); });
     }
     if (step === "done") { speak("advisor", ADVISOR.courtDone); }
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, notebookOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const choose = useCallback((c: "yes" | "no") => {
     if (step !== "ask" || !card) return;
@@ -152,6 +155,7 @@ export function CourtUI() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (document.querySelector(".notebook")) return;
       const k = e.key.toLowerCase();
       if (k === "y" || k === "arrowleft") choose("yes");
       else if (k === "n" || k === "arrowright") choose("no");

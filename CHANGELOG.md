@@ -99,6 +99,39 @@ the sibling `royal-concerns` folder. The gummy edition began on local branch
 
 ## Where to continue
 
+### Learning notebook and Gemini memory
+
+- Added an always-accessible Misc. button and a notebook link in the pause menu.
+  The notebook has a progress home page and separate pages for every run:
+  Did well, Try next, Practice, and Day log. Learning text is large, plain English,
+  with read-aloud buttons and short, repeatable questions without timers.
+- Persist court decisions, shopping results, kindness, treasury use, minigames,
+  conversation snippets, and practice attempts in browser local storage. Each
+  new run has a unique ID; older saves use a stable legacy ID. Existing choices
+  are imported without duplicates. Past runs survive losing or starting again.
+- Improvement claims require at least four scored choices and a higher later
+  success rate. Unscored events do not count as mistakes. Retried questions are
+  recorded separately; no ability or diagnosis is inferred.
+- Added a server-only OpenRouter integration for `google/gemini-3.6-flash`.
+  It receives the latest 100 structured events and up to four bounded chat snippets,
+  returns short evidence-linked notes and practice explanations, and caches results.
+  Generated notes must cite events of the correct kind. Question choices and
+  correct answers remain authored. Invalid output, timeouts, missing keys, and
+  API failures fall back to the saved game notes.
+- Gemini-backed learning memory is reused in ElevenLabs advisor context. Scripted
+  and live conversations both contribute bounded snippets when they end.
+- Opening the notebook pauses street movement and court progression, releases
+  market pointer lock, and keeps game shortcuts from answering behind the dialog.
+- Store credentials only in the ignored `.env.local`, never a VITE_ variable.
+  `.env.example` contains empty configuration fields only. Build/source scans
+  confirmed no OpenRouter credential in shipped assets or source files.
+- Validation: TypeScript, production build, six unit tests; browser checks for
+  persistence, separate run archives, real decision logs, improvements, large text,
+  practice retries, Gemini-response handling, offline fallback, advisor memory,
+  conversation capture, access during conversations, narrow layout and Escape.
+  One synthetic live request returned HTTP 200 with validated Gemini notes.
+
+
 Launcher fix: removed strict port binding from `start-gummy.cmd`. If 5202 is
 occupied, Vite selects the next free port. The launcher now directs players to
 the actual Local URL printed by Vite instead of promising a fixed port.
