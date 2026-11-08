@@ -46,8 +46,61 @@ const LAYOUT: Placement[] = [
 ];
 const HOUSE_KINDS = new Set(["cottage_a", "cottage_b", "cottage_c", "house_two", "house_tall", "shop"]);
 
+/** Hand-placed core: fills fast (all 25 by ~300 people) so early growth is clearly visible day to day. */
 export function visibleCount(people: number) {
-  return Math.max(3, Math.min(LAYOUT.length, 3 + Math.floor((people - 100) / 22)));
+  return Math.max(3, Math.min(LAYOUT.length, 3 + Math.floor((people - 100) / 9)));
+}
+
+/** Growth stage 0..1 across a typical reign (100 → ~800 people). Drives building size, castle size and the extra districts. */
+const growth = (people: number) => THREE.MathUtils.clamp((people - 100) / 700, 0, 1);
+
+// Extra districts beyond the hand-placed core: deterministic slots spread over all three windows, near → far,
+// revealed in order as the kingdom grows (up to ~100 more buildings). Instanced, so cheap.
+const EXTRA_KINDS: EnvName[] = ["cottage_a", "cottage_b", "cottage_c", "house_two", "house_tall", "shop", "cottage_a", "house_two", "tower", "cottage_b", "house_tall", "stall_terra"];
+type Slot = { kind: EnvName; p: Vec3; r: number; s: number };
+let SLOTS: Slot[] | null = null; // built lazily (needs ROAD, defined further down)
+const extraSlots = (): Slot[] => (SLOTS ??= buildSlots());
+const buildSlots = (): Slot[] => {
+  const r = rng(42);
+  const out: Slot[] = [];
+  for (let i = 0; i < 100; i++) {
+    const w = i % 3;
+    const z = -39 - (i / 100) * 46 - r() * 6;          // fills outward from near the windows to the castle
+    const off = (r() - 0.5) * 2.1;                      // spread across the window's width
+    const p = seen(w, z, off);
+    // keep the road clear
+    const t = THREE.MathUtils.clamp((-34 - z) / 78, 0, 1), rp = ROAD_PTS[Math.round(t * (ROAD_PTS.length - 1))];
+    if (Math.abs(p[0] - rp.x) < 1.6) p[0] += p[0] < rp.x ? -1.6 : 1.6;
+    const kind = EXTRA_KINDS[i % EXTRA_KINDS.length];
+    out.push({ kind, p, r: (r() - 0.5) * 0.8, s: (kind === "tower" ? 0.42 : 0.3) + r() * 0.06 });
+  }
+  return out;
+};
+const extraCount = (people: number) => Math.max(0, Math.min(100, Math.floor((people - 280) / 5)));
+
+function Districts({ people }: { people: number }) {
+  const n = extraCount(people), k = 1 + growth(people) * 0.9;
+  const byKind = useMemo(() => {
+    const m: Partial<Record<EnvName, Inst[]>> = {};
+    extraSlots().slice(0, n).forEach((sl) => { (m[sl.kind] ??= []).push({ p: sl.p, r: sl.r, s: sl.s * k }); });
+    return m;
+  }, [n, k]);
+  return <>{(Object.keys(byKind) as EnvName[]).map((nm) => <Props key={nm + n} name={nm} items={byKind[nm]!} cell={400} cast={false} />)}</>;
+}
+
+/** The castle on the horizon grows with the kingdom: bigger keep, then flanking towers, then an outer wall of towers + banners. */
+function Castle({ people }: { people: number }) {
+  const g = growth(people);
+  const base = seen(1, -112);
+  const s = 0.55 + g * 0.5;
+  return (
+    <group position={[base[0], 0, -112]}>
+      <group scale={s}><Prop name="castle" /></group>
+      {people >= 300 && [-1, 1].map((d) => <group key={d} position={[d * 9 * s, 0, 2]} scale={0.6 * s}><Prop name="tower" /></group>)}
+      {people >= 500 && [-2, -1, 1, 2].map((d) => <group key={"w" + d} position={[d * 7 * s, 0, 10 * s]} scale={0.45 * s}><Prop name="tower" /></group>)}
+      {people >= 650 && [-6, 6].map((x, i) => <Prop key={"b" + i} name={i ? "banner_red" : "banner_green"} position={[x * s, 0, 6 * s]} scale={1.2 * s} />)}
+    </group>
+  );
 }
 
 function Windmill({ scale = 1 }: { scale?: number }) {
@@ -79,6 +132,7 @@ function Piece({ pl }: { pl: Placement }) {
 const ROAD = new THREE.CatmullRomCurve3([
   seen(1, -34, 0.1), seen(0, -45, 0.3), seen(1, -56, -0.1), seen(0, -68, 0.2), seen(2, -80, -0.2), seen(1, -96, 0.1), seen(1, -112, 0),
 ].map((p) => new THREE.Vector3(...p)));
+const ROAD_PTS = ROAD.getSpacedPoints(60);
 
 function Road() {
   const tex = useSandTexture();
@@ -203,12 +257,13 @@ export function KingdomDiorama({ people, origin = [0, 0, 0] as Vec3, night = fal
       ))}
       <Peaks night={night} />
       <Filler />
-      <group position={[seen(1, -112)[0], 0, -112]} scale={0.55}><Prop name="castle" /></group>
+      <Castle people={people} />
       {LAYOUT.slice(0, n).map((pl, i) => (
         <PopIn key={i} position={pl.p} delay={i >= n - 1 ? 0.3 : 0}>
-          <Piece pl={pl} />
+          <Piece pl={{ ...pl, s: (pl.s ?? 1) * (1 + growth(people) * 0.9) }} />
         </PopIn>
       ))}
+      <Districts people={people} />
     </group>
   );
 }
