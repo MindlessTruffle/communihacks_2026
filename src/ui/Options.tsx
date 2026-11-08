@@ -277,6 +277,7 @@ function PauseCard({ day, setView, onClose }: { day?: number; setView: (v: "sett
         <div className="pause-btns">
           <button className="btn gold" data-autofocus onClick={() => { sfx("click"); onClose(); }}>▶ Keep playing</button>
           <button className="btn" onClick={() => { sfx("click"); setView("settings"); }}>⚙️ Options</button>
+          <button className="btn" onClick={() => { sfx("click"); onClose(); import("./Intro.tsx").then((m) => m.openIntro()); }}>📖 How to play</button>
           {inRun && <button className="btn ghost" onClick={() => { sfx("click"); setView("quit"); }}>🏠 Title screen</button>}
         </div>
         <div className="tap-hint">{isTouch() ? "Your reign saves by itself." : "Press Esc to keep playing. Your reign saves by itself."}</div>

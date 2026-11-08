@@ -15,6 +15,8 @@ import { playMusic, preloadSfx, suspendAudio } from "./audio/audio.ts";
 import { Captions, LiveRegion, useApplySettings, useInputMode } from "./platform/a11y.tsx";
 import { haptic, setWalkMode, getDevice } from "./platform/device.ts";
 import { Ico } from "./ui/icons.tsx";
+import { Vfx2D } from "./fx/Vfx2D.tsx";
+import { Intro, useIntroGate } from "./ui/Intro.tsx";
 
 // Heavy / rarely-needed pieces are split out: the ElevenLabs SDK only loads when a conversation opens.
 const Conversation = lazy(() => import("./convai/Conversation.tsx").then((m) => ({ default: m.Conversation })));
@@ -77,6 +79,8 @@ export default function App() {
   const settings = useGame((s) => s.settings);
   const convo = useGame((s) => !!s.convo);
   const minigame = useGame((s) => s.minigame);
+  const runDay = useGame((s) => s.run?.day);
+  const introBlocking = useIntroGate(phase, runDay); // first court of a new reign waits for the "how to play" intro
   const [menu, setMenu] = useState(false);
   const [confirmNew, setConfirmNew] = useState<number | null>(null);
   const prevPhase = useRef(phase);
@@ -120,7 +124,8 @@ export default function App() {
       if (e.key !== "Escape" || e.repeat) return;
       if (menu || confirmNew !== null) { window.dispatchEvent(new CustomEvent("rc-back")); return; }
       if (useGame.getState().adminOpen) { useGame.getState().admin(false); return; }
-      if (document.querySelector(".item-pop")) return; // market item card closes itself on Esc
+      // these overlays handle Esc themselves (item card closes, cutscene skips)
+      if (document.querySelector(".item-pop, .bw")) return;
       setMenu(true);
     };
     window.addEventListener("keydown", k, true);
@@ -164,7 +169,7 @@ export default function App() {
         <Suspense fallback={null}>
           {phase === "title" && <Title />}
           {phase === "setup" && <Setup />}
-          {phase === "morning" && <Morning />}
+          {phase === "morning" && !introBlocking && <Morning />}
           {phase === "court" && <CourtUI />}
           {phase === "summary" && <Summary />}
           {(phase === "street" || phase === "budget") && <StreetUI />}
@@ -175,6 +180,7 @@ export default function App() {
           {showGear && <MenuButton onClick={() => setMenu(true)} />}
           {!inGame && !menu && <button className="corner-btn title-gear" onClick={() => setMenu(true)} aria-label="Options"><Ico name="gear" fallback="⚙️" /></button>}
           <Captions />
+          <Intro />
           {menu && <PauseMenu onClose={closeMenu} />}
           {confirmNew !== null && (
             <ConfirmDialog
@@ -191,6 +197,7 @@ export default function App() {
       <div className="veil" key={phase} aria-hidden="true" />
       <div className="curtain" key={"c" + sk} aria-hidden="true" />
       <LiveRegion />
+      <Vfx2D />
       <Loader />
       <RotatePrompt />
     </div>

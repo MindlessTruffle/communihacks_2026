@@ -22,12 +22,18 @@ const SFX: Record<string, string[]> = {
   step: [0, 1, 2, 3, 4, 5].map((i) => `${K}/rpg-audio/footstep0${i}.ogg`),
   basket: [`${K}/rpg-audio/dropLeather.ogg`],
   stamp: [`${K}/rpg-audio/bookPlace1.ogg`],
+  pen: [1, 2, 3].map((i) => `${K}/rpg-audio/drawKnife${i}.ogg`), // scratchy quill stroke (played quiet + sped up)
+  whoosh: [`${K}/rpg-audio/cloth3.ogg`],
   dayDone: [`${K}/music-jingles/Pizzicato jingles/jingles_PIZZI01.ogg`],
   unlock: [`${K}/music-jingles/Pizzicato jingles/jingles_PIZZI10.ogg`],
   fanfare: [`${K}/music-jingles/Pizzicato jingles/jingles_PIZZI05.ogg`],
   growth: [`${K}/music-jingles/Pizzicato jingles/jingles_PIZZI07.ogg`],
   softSad: [`${K}/music-jingles/Pizzicato jingles/jingles_PIZZI14.ogg`],
   stars: [`${K}/music-jingles/Steel jingles/jingles_STEEL00.ogg`],
+  // intro / doodle tutorial (src/ui/Intro.tsx)
+  scribble: [1, 3, 5].map((i) => `${K}/interface-sounds/scratch_00${i}.ogg`),
+  boing: [`${K}/interface-sounds/pluck_002.ogg`],
+  tick: [`${K}/interface-sounds/select_001.ogg`],
 };
 
 const cache = new Map<string, Howl>();

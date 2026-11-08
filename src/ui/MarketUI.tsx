@@ -9,6 +9,8 @@ import { speak, sfx, stopVoice } from "../audio/audio.ts";
 import { haptic, isTouch } from "../platform/device.ts";
 import { EmoIco, FoodIco, Hint, Ico, useInput } from "./icons.tsx";
 import { ITEM_EMOJI } from "./BudgetScroll.tsx";
+import BudgetWin from "./BudgetWin.tsx";
+import { vfx } from "../fx/vfx.ts";
 
 const sum = (ids: string[]) => ids.reduce((a, id) => a + (MARKET_BY_ID[id]?.price ?? 0), 0);
 
@@ -126,7 +128,7 @@ function Checkout() {
   useEffect(() => {
     if (!r) return;
     sfx("stars");
-    const timers = [0, 1, 2].map((i) => setTimeout(() => { if (i < r.stars) { sfx("sparkle", { rate: 1 + i * 0.12 }); haptic("light"); } setShown(i + 1); }, 500 + i * 450));
+    const timers = [0, 1, 2].map((i) => setTimeout(() => { if (i < r.stars) { sfx("sparkle", { rate: 1 + i * 0.12 }); haptic("light"); vfx.burst("stars", vfx.pct(41 + i * 9, 36), { n: 10 }); } setShown(i + 1); }, 500 + i * 450));
     speak(null, r.stars === 3 ? UI.checkoutGreat : UI.checkoutOk).then(() => speak("advisor", ADVISOR.marketDone));
     return () => timers.forEach(clearTimeout);
   }, [r]);
@@ -154,6 +156,9 @@ function Checkout() {
           {row(r.underBudget, `Stayed in budget (${r.spent} / ${market.budget})`, `Over budget (${r.spent} / ${market.budget})`)}
           {row(r.trapsAvoided, "Skipped the shiny sales", `Bought a shiny sale: ${r.traps.map((t) => MARKET_BY_ID[t]?.name).join(", ")}`)}
         </div>
+        {r.bonus > 0 && (
+          <div className="row"><span><Ico name="chest" fallback="🧰" /></span><span className="pos">Savings bonus +{r.bonus} gold{r.streak > 1 ? ` · ${r.streak} nights in a row!` : ""}</span></div>
+        )}
         {r.missing.length > 0 && (
           <p className="small" style={{ fontWeight: 700 }}>The kingdom still needs: {r.missing.map((id) => `${ITEM_EMOJI[id] ?? ""} ${MARKET_BY_ID[id]?.name}`).join(", ")}</p>
         )}
@@ -166,6 +171,7 @@ function Checkout() {
 export default function MarketUI() {
   const phase = useGame((s) => s.phase);
   const checkout = useGame((s) => s.checkout);
+  const win = useGame((s) => s.win);
   const selected = useMarket((s) => s.selected);
   const nearCashier = useMarket((s) => s.nearCashier);
   const touch = isTouch();
@@ -176,13 +182,13 @@ export default function MarketUI() {
     if (nearCashier && !selected) sfx("sparkle", { volume: 0.5 });
   }, [nearCashier, selected]);
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (nearCashier && !selected && (e.key === "Enter" || e.key === " ")) pay(); };
+    const k = (e: KeyboardEvent) => { if (phase === "market" && nearCashier && !selected && (e.key === "Enter" || e.key === " ")) pay(); };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   });
   useEffect(() => () => { joy.x = 0; joy.y = 0; }, []);
 
-  if (phase === "checkout") return <Checkout />;
+  if (phase === "checkout") return win ? <BudgetWin /> : <Checkout />;
 
   return (
     <div className="layer">

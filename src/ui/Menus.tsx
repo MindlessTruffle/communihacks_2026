@@ -28,6 +28,7 @@ export function AdminPanel() {
   const open = useGame((s) => s.adminOpen);
   const cmd = useGame((s) => s.adminCmd);
   const admin = useGame((s) => s.admin);
+  const playWinDemo = useGame((s) => s.playWinDemo);
   const run = useGame((s) => s.run);
   const phase = useGame((s) => s.phase);
   if (!open) return null;
@@ -50,6 +51,8 @@ export function AdminPanel() {
           <B c="toStreet">→ Evening street</B>
           <B c="toMarket">→ Budget/market</B>
           <B c="nextDay">→ Sleep / next day</B>
+          <button onClick={() => { sfx("tap"); playWinDemo(); }}>▶ Budget-win cutscene</button>
+          <button onClick={() => { sfx("tap"); admin(false); import("./Intro.tsx").then((m) => m.openIntro()); }}>▶ Replay tutorial</button>
           <button onClick={() => admin(false)}>Close</button>
         </div>
       )}

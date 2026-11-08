@@ -21,7 +21,7 @@ function Stat({ value, icon, kind }: { value: number; icon: React.ReactNode; kin
     haptic(d > 0 ? "success" : "soft");
   }, [value, kind]);
   return (
-    <div className={"stat" + (bump ? " bump" : "")} key={bump} aria-label={`${kind} ${value}`}>
+    <div className={"stat" + (bump ? " bump" : "")} key={bump} data-stat={kind} data-pop={bump ? bump : undefined} aria-label={`${kind} ${value}`}>
       <span className="ico">{icon}</span>
       <span>{value}</span>
       {floats.map((f) => <span key={f.id} className={"float " + (f.d > 0 ? "up" : "down")}>{f.d > 0 ? "+" : ""}{f.d}</span>)}

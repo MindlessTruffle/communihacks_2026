@@ -26,6 +26,12 @@ export interface Settings {
   master: number;
 }
 
+/** Data for the budget-win cutscene (real checkout or admin demo). */
+export interface WinData {
+  list: string[]; basket: string[]; budget: number; spent: number; saved: number; bonus: number; streak: number; stars: number;
+  goldBefore: number; goldAfter: number; demo?: boolean; returnTo?: Phase;
+}
+
 export type CourtStep = "enter" | "ask" | "reply" | "advisor" | "leave" | "done";
 export type ConvoMode = "advisor" | "npc" | "review";
 
@@ -49,6 +55,7 @@ interface Store {
   market: { list: string[]; budget: number; basket: string[]; result: sim.MarketResult | null };
   // reign
   report: sim.ReignReport | null;
+  win: WinData | null;
   // fx bus (UI reacts to these)
   fx: { id: number; kind: string; data?: unknown } | null;
   adminOpen: boolean;
@@ -85,6 +92,8 @@ interface Store {
   addToBasket(id: string): void;
   removeFromBasket(id: string): void;
   checkout(): void;
+  endWin(): void;
+  playWinDemo(): void;
   sleep(): void;
   loseNow(reason?: string): void;
   finishReview(): void;
@@ -124,6 +133,7 @@ function save(run: RunState | null, phase: Phase) {
 }
 
 let fxId = 0;
+let demoRuns = 0; // admin cutscene demo alternates the normal and the 3-star (perfect) version
 
 /** Pick tonight's street NPCs (always advisor first, then 2 townsfolk). */
 function pickNpcs(run: RunState): string[] {
@@ -148,6 +158,7 @@ export const useGame = create<Store>((set, get) => ({
   minigame: null,
   market: { list: [], budget: 0, basket: [], result: null },
   report: null,
+  win: null,
   fx: null,
   adminOpen: false,
   previewRuler: null,
@@ -277,8 +288,37 @@ export const useGame = create<Store>((set, get) => ({
   },
   checkout() {
     const { run, market } = get();
+    if (get().phase !== "market" || market.result) return; // never apply the market twice
     const { state, result } = sim.applyMarket(run!, market.basket, market.list, market.budget);
-    set({ run: state, market: { ...market, result }, phase: "checkout" });
+    // A budget win plays the cutscene first (MarketUI shows it while phase === "checkout"), then the normal checkout card.
+    const win: WinData | null = result.budgetWin ? {
+      list: market.list, basket: market.basket, budget: market.budget, spent: result.spent, saved: result.saved,
+      bonus: result.bonus, streak: result.streak, stars: result.stars, goldBefore: state.gold - result.bonus, goldAfter: state.gold,
+    } : null;
+    set({ run: state, market: { ...market, result }, phase: "checkout", win });
+  },
+  endWin() {
+    const w = get().win;
+    if (!w) return;
+    if (w.demo) {
+      // admin demo: put everything back the way it was, nothing was really bought
+      set({ win: null, phase: w.returnTo ?? "street", market: { list: [], budget: 0, basket: [], result: null } });
+      return;
+    }
+    set({ win: null });
+  },
+  /** Admin: play the cutscene right now with a plausible fake basket (does not touch gold or gems). */
+  playWinDemo() {
+    const run = get().run;
+    const list = ["bread", "milk", "carrots", "apples", "candles"];
+    const spent = list.reduce((a, id) => a + (MARKET_BY_ID[id]?.price ?? 0), 0);
+    const budget = spent + 4, saved = 4;
+    const gold = run?.gold ?? 40;
+    const bonus = Math.max(sim.SAVINGS_BONUS_MIN, Math.ceil(saved / 2));
+    const prev = get().phase;
+    set({ adminOpen: false, phase: "checkout", market: { list, budget, basket: list, result: null },
+      win: { list, basket: list, budget, spent, saved, bonus, streak: 3, stars: (demoRuns++ % 2) ? 3 : 2, goldBefore: gold, goldAfter: gold + bonus, demo: true,
+        returnTo: prev === "market" || prev === "checkout" ? "street" : prev } });
   },
   sleep() {
     const run = sim.endDay(get().run!);

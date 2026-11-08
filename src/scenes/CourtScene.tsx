@@ -20,6 +20,8 @@ import { Flame, WindowShafts, useRugTexture } from "./fx.tsx";
 import { painterlyMaterial } from "./painterly.ts";
 import { Sparkles } from "@react-three/drei";
 import { getDevice } from "../platform/device.ts";
+import { vfx } from "../fx/vfx.ts";
+import { Vfx3D } from "../fx/Vfx3D.tsx";
 
 /** Kenney mini characters are ~0.37 units tall: x5 = ~1.9 m, to scale with the 7-10 m wall and 1.7 m dais. */
 const CHAR = 5;
@@ -136,7 +138,7 @@ function Visitor({ charId, mode, reaction, onArrive, onLeft }: {
     const speed = reduce ? 6 : 3.2;
     if (mode === "enter" || (mode === "stand" && !arrived.current)) {
       x.current = Math.max(COURT.visitorStand, x.current - dt * speed);
-      if (x.current <= COURT.visitorStand && !arrived.current) { arrived.current = true; setMoving(false); onArrive(); }
+      if (x.current <= COURT.visitorStand && !arrived.current) { arrived.current = true; setMoving(false); onArrive(); vfx.burst("dust", { x: COURT.visitorStand, y: 0.1, z: COURT.visitorZ }, { n: 6, scale: 1.6 }); }
     } else if (mode === "leave") {
       x.current += dt * speed * 1.2;
       if (x.current >= COURT.offstage && !left.current) { left.current = true; onLeft(); }
@@ -160,6 +162,21 @@ function Visitor({ charId, mode, reaction, onArrive, onLeft }: {
         : <Character url={ch.model} aid={ch.aid} anim={anim} scale={scale} />}
     </group>
   );
+}
+
+/** Happy decision -> confetti / hearts over the visitor (reads the store's fx bus). Quiet on a "no". */
+function CourtFx() {
+  useEffect(() => useGame.subscribe((s, p) => {
+    if (!s.fx || s.fx === p.fx || s.fx.kind !== "decision") return;
+    const d = s.fx.data as { choice?: string; outcome?: { delta?: { people: number; happiness: number; gold: number } } } | undefined;
+    const dl = d?.outcome?.delta;
+    if (d?.choice !== "yes" || !dl || dl.people + dl.happiness + dl.gold < 0) return;
+    const head = { x: COURT.visitorStand, y: 1.5, z: COURT.visitorZ };
+    vfx.burst("confetti", head, { scale: 2.2, n: 30 });
+    vfx.burst("sparkle", head, { scale: 2.2, n: 8 });
+    if (dl.happiness > 0) vfx.burst("hearts", { ...head, y: head.y + 0.4 }, { scale: 2, n: 4 });
+  }), []);
+  return null;
 }
 
 const TIER = { coin_mound_s: 1.0, coin_mound_m: 1.5, coin_mound_l: 2.1 } as const;
@@ -373,6 +390,8 @@ export function CourtScene() {
   return (
     <>
       <CourtCamera />
+      <Vfx3D />
+      <CourtFx />
       <Sky top={night ? "#2a3470" : "#a7cfe9"} bottom={night ? "#f0a070" : "#e8f0f4"} />
       {/* key = sun BEHIND the windows (wall casts window-shaped light on floor + rug), cool unshadowed fill from the front-left */}
       <Lighting preset={night ? "dusk" : "day"} target={[-2, 0, 1]} shadow={{ size: 22, top: 22, bottom: -22, far: 90 }}

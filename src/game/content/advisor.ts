@@ -20,6 +20,8 @@ export const ADVISOR = {
   marketIntro: "First, let's make a shopping list. Then we stick to it!",
   marketOver: "That's more than our budget. Let's take something off.",
   marketDone: "Great shopping! Let's head home to sleep.",
+  budgetWin: "Well done, Your Majesty! You stuck to the budget, so the treasury keeps the savings. Staying in budget pays off!",
+  budgetWinPerfect: "Wonderful, Your Majesty! Everything on the list, no shiny sales, and gold saved. A perfect shop!",
   marketTrap: "Hmm. Is that on our list?",
   marketOffList: "That one is not on our list.",
   goodStreak: "You're making great choices today!",

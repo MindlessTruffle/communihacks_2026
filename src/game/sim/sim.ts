@@ -315,7 +315,14 @@ export function needsFor(s: RunState): string[] {
   return tonightsNeeds(s.day, r);
 }
 
-export interface MarketResult { stars: number; spent: number; listDone: boolean; underBudget: boolean; trapsAvoided: boolean; missing: string[]; traps: string[] }
+/** Savings bonus: half the gold left under budget (rounded up), never less than this. */
+export const SAVINGS_BONUS_MIN = 3;
+export interface MarketResult {
+  stars: number; spent: number; listDone: boolean; underBudget: boolean; trapsAvoided: boolean; missing: string[]; traps: string[];
+  /** Stuck to the budget: whole list bought AND under budget. Triggers the budget-win cutscene + savings bonus. */
+  budgetWin: boolean;
+  saved: number; bonus: number; streak: number; gemGiven: boolean;
+}
 
 export function applyMarket(prev: RunState, basket: string[], list: string[], budget: number): { state: RunState; result: MarketResult } {
   const s = clone(prev);
@@ -334,11 +341,19 @@ export function applyMarket(prev: RunState, basket: string[], list: string[], bu
   else s.happiness += TUNING.market.needsBonusHappiness;
   s.happiness += traps.length * TUNING.market.trapHappiness;
   if (basket.includes("medicine")) s.items.medicine = (s.items.medicine ?? 0) + 1;
-  if (stars === 3) s.gems.responsibility += 1;
+  // Budget win: savings bonus + 1 responsibility gem (the 3-star gem is the same gem: never given twice) + streak.
+  const budgetWin = underBudget && listDone;
+  const saved = Math.max(0, budget - spent);
+  const bonus = budgetWin ? Math.max(SAVINGS_BONUS_MIN, Math.ceil(saved / 2)) : 0;
+  const x = s as RunState & { budgetStreak?: number };
+  x.budgetStreak = budgetWin ? (x.budgetStreak ?? 0) + 1 : 0;
+  s.gold += bonus;
+  const gemGiven = budgetWin || stars === 3;
+  if (gemGiven) s.gems.responsibility += 1;
   s.happiness = clamp(s.happiness, -10, 100);
   const d = s.days[s.days.length - 1];
   if (d) d.marketStars = stars;
-  return { state: s, result: { stars, spent, listDone, underBudget, trapsAvoided, missing, traps } };
+  return { state: s, result: { stars, spent, listDone, underBudget, trapsAvoided, missing, traps, budgetWin, saved, bonus, streak: x.budgetStreak ?? 0, gemGiven } };
 }
 
 /** End of night: population growth, loss check. */

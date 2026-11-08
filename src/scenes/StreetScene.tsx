@@ -14,6 +14,8 @@ import { Shaft, Halos } from "./fx.tsx";
 import { painterlyMaterial } from "./painterly.ts";
 import { move, pollGamepadSticks, getDevice } from "../platform/device.ts";
 import { sfx } from "../audio/audio.ts";
+import { vfx } from "../fx/vfx.ts";
+import { Vfx3D } from "../fx/Vfx3D.tsx";
 import { Grass, HIGH, Lighting, PostFX, scatter, useGroundTexture } from "./look.tsx";
 
 export const CURVE = new THREE.CatmullRomCurve3([
@@ -362,7 +364,7 @@ export default function StreetScene() {
       pl.visible = !convo;
     }
     if (moving !== (anim === "walk")) setAnim(moving ? "walk" : "idle");
-    if (moving) { stepAcc.current += dt; if (stepAcc.current > 0.32) { stepAcc.current = 0; sfx("step", { volume: 0.35, rate: 0.9 + Math.random() * 0.2 }); } }
+    if (moving) { stepAcc.current += dt; if (stepAcc.current > 0.32) { stepAcc.current = 0; sfx("step", { volume: 0.35, rate: 0.9 + Math.random() * 0.2 }); if (pl) vfx.burst("dust", { x: pl.position.x, y: pl.position.y + 0.12, z: pl.position.z }, { n: 5, scale: 2.1 }); } }
 
     // reached a blocking NPC → start the conversation
     if (!frozen && nextBlock >= 0 && t >= blockT - 0.001) {
@@ -379,6 +381,7 @@ export default function StreetScene() {
   return (
     <>
       <StreetCamera playerRef={player} convoTarget={convoTarget} />
+      <Vfx3D />
       <Sky top="#8a82d4" bottom="#ffd2aa" />
       <Lighting preset="sunset" shadow={{ size: 18, far: 90 }} target={[0, 0, 0]} follow={() => player.current?.position} />
       <PostFX preset="sunset" />

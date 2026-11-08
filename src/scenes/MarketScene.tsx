@@ -12,6 +12,8 @@ import { Props, Prop, rng, setGlow, usePainterly, type EnvName, type Inst } from
 import { Halos } from "./fx.tsx";
 import { move, pollGamepadSticks } from "../platform/device.ts";
 import { sfx } from "../audio/audio.ts";
+import { vfx } from "../fx/vfx.ts";
+import { Vfx3D } from "../fx/Vfx3D.tsx";
 import { Grass, Lighting, PostFX, scatter, useGroundTexture } from "./look.tsx";
 
 export const useMarket = create<{ selected: string | null; nearCashier: boolean; set(p: Partial<{ selected: string | null; nearCashier: boolean }>): void }>((set) => ({
@@ -90,6 +92,7 @@ function ShopItem({ slot, onPick }: { slot: Slot; onPick: (id: string, dist: num
 
 function Basket() {
   const basket = useGame((s) => s.market.basket);
+  const winning = useGame((s) => !!s.win);
   const ref = useRef<THREE.Group>(null!);
   const { camera } = useThree();
   const tmp = useMemo(() => ({ fwd: new THREE.Vector3(), down: new THREE.Vector3(), right: new THREE.Vector3(), q: new THREE.Quaternion() }), []);
@@ -98,7 +101,7 @@ function Basket() {
   useEffect(() => { if (basket.length > prevLen.current) bump.current = 1; prevLen.current = basket.length; }, [basket.length]);
   useFrame((_, dt) => {
     const g = ref.current;
-    if (!g) return;
+    if (!g || winning) return;
     bump.current = Math.max(0, bump.current - dt * 3);
     camera.getWorldDirection(tmp.fwd);
     tmp.down.set(0, -1, 0).applyQuaternion(camera.quaternion);
@@ -108,7 +111,7 @@ function Basket() {
     g.quaternion.copy(camera.quaternion);
   });
   return (
-    <group ref={ref}>
+    <group ref={ref} visible={!winning}>
       <group rotation={[0.7, -0.35, 0.08]}>
         <Model url="/models/basket.glb" scale={0.38} shadows={false} />
         {basket.slice(-9).map((id, i) => (
@@ -210,6 +213,7 @@ function FirstPerson({ onMoveTick }: { onMoveTick: (pos: THREE.Vector3) => void 
   }, [camera, gl]);
 
   useFrame((_, dt) => {
+    if (useGame.getState().win) return; // budget-win cutscene owns the camera
     pollGamepadSticks();
     yaw.current -= move.lookX * dt * 2.2;
     pitch.current = THREE.MathUtils.clamp(pitch.current - move.lookY * dt * 1.6, -0.9, 0.6);
@@ -231,7 +235,7 @@ function FirstPerson({ onMoveTick }: { onMoveTick: (pos: THREE.Vector3) => void 
     if (moving) {
       bob.current += dt * 9;
       stepAcc.current += dt;
-      if (stepAcc.current > 0.38) { stepAcc.current = 0; sfx("step", { volume: 0.3, rate: 0.9 + Math.random() * 0.2 }); }
+      if (stepAcc.current > 0.38) { stepAcc.current = 0; sfx("step", { volume: 0.3, rate: 0.9 + Math.random() * 0.2 }); { const sd = Math.random() < 0.5 ? -0.5 : 0.3; vfx.burst("dust", { x: p.x + fwd.x * 2.8 + right.x * sd * 2.4, y: 0.1, z: p.z + fwd.z * 2.8 + right.z * sd * 2.4 }, { n: 4, scale: 1.3 }); } }
     }
     p.y = 1.55 + (reduce ? 0 : Math.sin(bob.current) * 0.035);
     camera.rotation.set(pitch.current, yaw.current, 0, "YXZ");
@@ -295,6 +299,53 @@ function Moon() {
   );
 }
 
+
+/** Budget-win cutscene, 3D part: the ruler walks out of the market toward the camera carrying the basket, in warm lantern light. */
+const WIN_WALK_S = 2.6;
+function WinShot() {
+  const win = useGame((s) => s.win);
+  const ruler = useGame((s) => s.run?.rulerModel) ?? "character-female-c";
+  const reduce = useGame((s) => s.settings.reduceMotion);
+  const { camera } = useThree();
+  const t0 = useRef(0);
+  const who = useRef<THREE.Group>(null!);
+  const light = useRef<THREE.PointLight>(null!);
+  useEffect(() => {
+    t0.current = performance.now();
+    if (win) { const pc = camera as THREE.PerspectiveCamera; pc.fov = 52; pc.updateProjectionMatrix(); }
+  }, [win, camera]);
+  useFrame(() => {
+    if (!win) return;
+    const t = Math.min(1, (performance.now() - t0.current) / 1000 / WIN_WALK_S);
+    const e = reduce ? 1 : 1 - Math.pow(1 - t, 2);
+    const z = -22.6 + e * 3.9;
+    if (who.current) who.current.position.set(0, 0, z);
+    if (light.current) light.current.position.set(0.6, 2.6, z + 1.2);
+    camera.position.set(0.1 - t * 0.1, 1.0, -14.6 - t * 0.2);
+    camera.lookAt(0, 0.85, z - 0.6);
+  });
+  if (!win) return null;
+  const items = win.basket.slice(-6);
+  return (
+    <>
+      <pointLight ref={light} intensity={16} distance={9} decay={1.5} color="#ffc27a" />
+      <group ref={who} position={[0, 0, -22.6]}>
+        <Character url={`/kenney/mini-characters/${ruler}.glb`} anim="walk" scale={2} crown speed={0.9}>
+          <group position={[0.12, 0.34, 0.3]} rotation={[0.15, 0, 0]}>
+            <Model url="/models/basket.glb" scale={0.2} shadows={false} />
+            {items.map((id, i) => (
+              <Model key={i} url={MARKET_BY_ID[id].model} shadows={false}
+                position={[((i % 3) - 1) * 0.05, 0.07 + Math.floor(i / 3) * 0.04, (Math.floor(i / 3) % 2 - 0.5) * 0.04]}
+                scale={(MARKET_BY_ID[id].scale ?? 1) * 0.15} />
+            ))}
+          </group>
+        </Character>
+        <Sparkles count={26} scale={[2.4, 2.6, 2]} position={[0, 1.2, 0]} size={5} speed={0.5} color="#ffe9a0" />
+      </group>
+    </>
+  );
+}
+
 export default function MarketScene() {
   const { stalls, slots } = useMemo(layout, []);
   const dressing = useMemo(() => buildMarket(stalls), [stalls]);
@@ -321,6 +372,7 @@ export default function MarketScene() {
     if (phase !== "market") return;
     if (dist > 6.5) { sfx("hmm", { volume: 0.4 }); return; } // generous reach: tapping what you can see should work
     sfx("pop");
+    const sp = slots.find((q) => q.id === id)?.pos; if (sp) vfx.burst("sparkle", sp, { n: 10, scale: 0.8 });
     setM({ selected: id });
   };
 
@@ -364,6 +416,8 @@ export default function MarketScene() {
 
       <Halos points={haze} size={4.2} color="#ffb766" opacity={0.5} />
       <Basket />
+      <Vfx3D slotPos={(id) => slots.find((q) => q.id === id)?.pos} />
+      <WinShot />
     </>
   );
 }
