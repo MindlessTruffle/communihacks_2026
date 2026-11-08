@@ -4,6 +4,9 @@ import "@fontsource/atkinson-hyperlegible/400.css";
 import "@fontsource/atkinson-hyperlegible/700.css";
 import "./styles.css";
 import "./polish.css";
+import "./a11y-text.css"; // readable-text floor; keep last
+import { startTextFloor } from "./platform/textFloor.ts";
+startTextFloor();
 import App from "./App.tsx";
 import { startDeviceWatch, lockBrowserChrome, registerServiceWorker, startGamepadBridge } from "./platform/device.ts";
 
