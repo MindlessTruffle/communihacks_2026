@@ -114,8 +114,9 @@ export function Hint({ k, force }: { k: HintKey; force?: InputKind }) {
     return <span className="glyph-group" aria-hidden>{["W", "A", "S", "D"].map((c) => <span key={c} className="glyph key"><Ico name="key" fallback="" /><b>{c}</b></span>)}</span>;
   if (dev === "mouse") {
     const wide = k === "next" || k === "enter";
-    return <span className={"glyph key" + (wide ? " wide" : "") + (k === "move" ? " cluster" : "")} aria-hidden>
-      <Ico name={k === "move" ? "keycluster" : wide ? "keywide" : "key"} fallback="" /><b>{KEY_TEXT[k]}</b></span>;
+    if (wide) return <kbd className="glyph keyboard-wide" aria-hidden>{KEY_TEXT[k]}</kbd>;
+    return <span className={"glyph key" + (k === "move" ? " cluster" : "")} aria-hidden>
+      <Ico name={k === "move" ? "keycluster" : "key"} fallback="" /><b>{KEY_TEXT[k]}</b></span>;
   }
   return <span className="glyph text" aria-hidden>[{KEY_TEXT[k]}]</span>;
 }

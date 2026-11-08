@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "count": 100,
+  "maxTriangles": 1730,
+  "maxDraws": 6,
+  "fittingCombinations": 90,
+  "testedEyeStates": 15,
+  "fullyDressed": {
+    "triangles": 2434,
+    "draws": 6
+  },
+  "checks": [
+    "GLB loaded with embedded textures",
+    "ground origin and heights",
+    "attachment transforms",
+    "shared geometry",
+    "isolated eyes/colors",
+    "optional fallback",
+    "required errors"
+  ],
+  "ui": {
+    "shuffle": "passed",
+    "eyeFrameButton": "passed",
+    "mobileViewport": "390 x 844"
+  },
+  "browserErrors": []
+}

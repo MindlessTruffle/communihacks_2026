@@ -534,6 +534,7 @@ body:has(.treasury) .phase-dots, body:has(.treasury) .stats { visibility: hidden
 .glyph.pad b { color: #fff; -webkit-text-stroke: .08em rgba(0,0,0,.6); paint-order: stroke fill; font-size: .78em; padding-bottom: 0; }
 .glyph.pad b:empty { display: none; }
 .glyph.text { font-size: .8em; opacity: .8; height: auto; }
+.glyph.keyboard-wide { flex: 0 0 auto; min-width: 4.2em; width: auto; height: 1.8em; padding: .15em .6em; margin: 0 .15em; border: 2px solid #59402b; border-bottom-width: 4px; border-radius: 7px; background: #fff9e9; color: #2b2118; font-size: .7em; font-weight: 400; line-height: 1; white-space: nowrap; text-shadow: none; box-shadow: 0 1px 2px #0002; }
 .keyhint { position: absolute; right: calc(var(--u) * 1.6); bottom: calc(var(--u) * -2.6); display: flex; gap: calc(var(--u) * .4); font-size: calc(var(--u) * 2.2); filter: drop-shadow(0 calc(var(--u) * .25) 0 rgba(0,0,0,.35)); }
 .choice .glyph { font-size: calc(var(--u) * 1.8); }
 .cont { display: inline-flex; align-items: center; gap: .3em; }

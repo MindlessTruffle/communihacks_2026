@@ -99,6 +99,17 @@ the sibling `royal-concerns` folder. The gummy edition began on local branch
 
 ## Where to continue
 
+### Market keycap fix and character-source handoff
+
+- Replaced the stretched wide-key image with a text-centred Space/Enter keycap,
+  so general button image rules cannot squeeze the market checkout hint.
+- Added the standalone `visitor-kit/` character source: editable
+  `gummy_visitor_library.blend`, matching GLB, textures, manifest, demo, and docs.
+  No scenery Blender file is added; scenery remains for the teammate's merge.
+- Confirmed the character GLB matches the game's asset byte for byte. Appearance
+  checks passed for 100 seeded characters. Game tests, TypeScript, and build passed.
+
+
 ### Street movement introduction
 
 - Added a large WASD/arrow-key prompt at the beginning of each day's street.

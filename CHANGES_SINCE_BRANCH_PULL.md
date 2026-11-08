@@ -20,6 +20,9 @@ by feature. The earlier standalone walkaround prototype lives in the sibling
 - Added blinking, breathing, reactions, gentle squash/stretch, and walking motion.
 - Updated all six ruler-selection portraits to match the gummy characters.
 - Updated the character gallery to include the advisor and the complete cast.
+- Added the complete `visitor-kit/` source handoff: editable character Blender
+  library, matching GLB, textures, manifest, standalone React demo, and documentation.
+  The only Blender file added is `visitor-kit/gummy_visitor_library.blend`.
 
 Files: `src/characters/gummy/`, `public/models/gummy-visitors.glb`,
 `src/scenes/common.tsx`, `src/dev/chargallery.tsx`.
@@ -96,6 +99,8 @@ Files: `src/scenes/MarketScene.tsx`, `src/ui/MarketUI.tsx`,
   price below Yes, retaining affordability, credit, and item-payment information.
 - Centre check/cross graphics independently of the keyboard/controller badges.
   Align the buttons in a row and keep the badges small in their own corner.
+- Replace the squeezed Space/Enter hint image with a properly proportioned keycap,
+  including the checkout prompt at the end of the market.
 - Replace the large street walking panel with **WASD / arrows · Move**. Use a
   smaller translucent style in both the street and market.
 - Place street guidance clear of the resource panel. In narrow windows, measure
