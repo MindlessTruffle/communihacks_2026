@@ -32,6 +32,7 @@ export function Title() {
   const root = useRef<HTMLDivElement>(null);
   const [going, setGoing] = useState(false);
   const raf = useRef(0);
+  const fadeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const done = useRef(false);
 
   const startRef = useRef<() => void>(() => {});
@@ -41,7 +42,7 @@ export function Title() {
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, []);
-  useEffect(() => { intro.progress = 0; descending = false; return () => { cancelAnimationFrame(raf.current); descending = false; titleEsc.skip = null; }; }, []);
+  useEffect(() => { intro.progress = 0; descending = false; return () => { cancelAnimationFrame(raf.current); clearTimeout(fadeTimer.current); descending = false; titleEsc.skip = null; }; }, []);
 
   const finish = () => {
     if (done.current) return;
@@ -59,17 +60,19 @@ export function Title() {
     if (reduce) { // ~180 ms crossfade, no camera travel
       intro.progress = 1;
       set("--fade", "0");
-      window.setTimeout(finish, FADE_MS);
+      fadeTimer.current = setTimeout(finish, FADE_MS);
       return;
     }
-    const t0 = performance.now();
+    let previous = performance.now(), elapsed = 0;
     const tick = (now: number) => {
-      const t = Math.min(1, (now - t0) / DESCENT_MS);
+      // Don't skip the whole descent when one expensive render stalls a frame.
+      elapsed += Math.min(64, Math.max(0, now - previous)); previous = now;
+      const t = Math.min(1, elapsed / DESCENT_MS);
       intro.progress = t;
       const p = smoothProgress(t);
-      set("--cloud-back", `${-p * 118}vh`); set("--cloud-front", `${-p * 160}vh`);
+      set("--cloud-back", `${p * 80}vh`); set("--cloud-front", `${p * 110}vh`);
       set("--fade", String(Math.max(0, 1 - p * 5)));       // title + button fade out in the first fifth
-      set("--veil", String(Math.max(0, (p - 0.55) * 2.2))); // cloud-white wash through the middle of the fall
+      set("--veil", String(Math.sin(Math.PI * t) ** 4 * .92)); // pass through a cloud, then reveal the court
       if (t >= 1) finish(); else raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);

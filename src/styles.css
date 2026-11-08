@@ -698,3 +698,12 @@ body:has(.captions) .checkout-center { --checkout-caption: var(--cap-band); }
 .checkout-card .btn { min-height: 56px; }
 .setup-title { font: 30px var(--font-display); margin: 0 0 12px; }
 :root .center > .card.ruler-setup { padding: 20px; }
+
+/* Centre the choice mark independently of the keyboard / controller badge. */
+.chat-decisions { align-items: start; }
+.chat-decisions .btn.yes, .chat-decisions .btn.no { position: relative; display: grid; place-items: center; padding: 0; gap: 0; flex-shrink: 0; }
+.chat-decisions .btn > .ico-img { width: 90%; height: 90%; grid-area: 1 / 1; margin: 0; vertical-align: initial; }
+.chat-decisions .btn > .glyph { position: absolute; right: -7px; bottom: -5px; width: 23px; height: 23px; min-width: 23px; font-size: 16px; margin: 0; }
+.chat-decisions .btn > .glyph .ico-img { width: 100%; height: 100%; object-fit: contain; }
+.chat-decisions .btn > .glyph b { font-size: 15px; padding: 0; }
+.chat-decisions .btn > .glyph.text { font-size: 12px; }

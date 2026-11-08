@@ -99,6 +99,19 @@ the sibling `royal-concerns` folder. The gummy edition began on local branch
 
 ## Where to continue
 
+### Opening transition and choice alignment fixes
+
+- Corrected the opening cloud layers to move down. The middle cloud veil now fades
+  back out, revealing the court before setup instead of ending on a white flash.
+- Capped animation time advances after slow frames so the descent cannot skip
+  straight to its end. Clean up the reduced-motion timer on unmount.
+- Centred check/cross marks independently inside the court buttons. Keyboard and
+  gamepad hints now have their own small corner badge instead of shifting the mark.
+- Verified the normal opening, reduced motion and Escape skip; measured icon and
+  button alignment at 1280×800 and 2048×1085 with keyboard and gamepad hints.
+  TypeScript and production build passed; browser checks reported no page errors.
+
+
 ### Learning notebook and Gemini memory
 
 - Added an always-accessible Misc. button and a notebook link in the pause menu.
