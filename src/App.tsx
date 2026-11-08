@@ -28,6 +28,8 @@ const StreetScene = lazy(importStreet);
 const MarketScene = lazy(importMarket);
 const StreetUI = lazy(importStreetUI);
 const MarketUI = lazy(importMarketUI);
+// DEV-only trailer camera hook (src/dev/cineCam.ts); inert unless ?cine=1, absent from prod builds.
+const CineCam = import.meta.env.DEV ? lazy(() => import("./dev/cineCam.ts").then((m) => ({ default: m.CineCam }))) : () => null;
 
 preloadCore();
 preloadSfx();
@@ -159,6 +161,7 @@ export default function App() {
           camera={{ fov: 30, position: [0, 3.5, 16] }}
         >
           <AdaptiveDpr pixelated={false} />
+          {import.meta.env.DEV && <Suspense fallback={null}><CineCam /></Suspense>}
           <Suspense fallback={null}>
             <SceneFor phase={phase} />
           </Suspense>
