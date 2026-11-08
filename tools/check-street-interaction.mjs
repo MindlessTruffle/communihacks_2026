@@ -21,6 +21,9 @@ try {
     useGame.getState().closeMorning();
     useGame.getState().startEvening();
   });
+  await page.locator('.street-movement-intro.visible').waitFor();
+  await page.keyboard.press('ArrowRight');
+  await page.locator('.street-movement-intro').waitFor({ state: 'detached' });
   await page.locator('.street-walk-hint').waitFor();
   await page.evaluate(async () => {
     window.streetTest = (await import('/src/scenes/StreetScene.tsx')).useStreet;

@@ -707,3 +707,12 @@ body:has(.captions) .checkout-center { --checkout-caption: var(--cap-band); }
 .chat-decisions .btn > .glyph .ico-img { width: 100%; height: 100%; object-fit: contain; }
 .chat-decisions .btn > .glyph b { font-size: 15px; padding: 0; }
 .chat-decisions .btn > .glyph.text { font-size: 12px; }
+
+.street-movement-intro { position: absolute; z-index: var(--z-decision); left: 50%; top: 22%; transform: translateX(-50%); width: min(520px, calc(100vw - 48px)); padding: 24px 28px; border: 3px solid #71513b; border-radius: 18px; background: #fff4d8f0; color: #362611; box-shadow: 0 12px 36px #0003; text-align: center; font: calc(24px * var(--ts)) / 1.35 var(--font-body); pointer-events: none; opacity: 1; transition: opacity 400ms ease; }
+.street-movement-intro.fading { opacity: 0; }
+.street-movement-intro h2 { font: calc(34px * var(--ts)) / 1.2 var(--font-display); margin: 0 0 12px; }
+.street-movement-intro p { margin: 10px 0; }
+.street-movement-intro small { display: block; font-size: 18px; margin-top: 14px; }
+.movement-keycaps { display: flex; justify-content: center; gap: 12px; margin: 16px 0; }
+.movement-keycaps kbd { display: grid; place-items: center; width: 58px; height: 58px; border: 2px solid #71513b; border-bottom-width: 5px; border-radius: 10px; background: #fffdf5; font: 32px var(--font-display); }
+@media (max-height: 500px) { .street-movement-intro { top: 15%; padding: 14px 20px; } .street-movement-intro h2 { font-size: 27px; } .street-movement-intro p { margin: 4px 0; font-size: 20px; } .movement-keycaps { margin: 8px 0; } .movement-keycaps kbd { width: 44px; height: 44px; font-size: 26px; } .street-movement-intro small { margin-top: 8px; } }

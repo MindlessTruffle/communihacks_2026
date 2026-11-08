@@ -101,6 +101,9 @@ Files: `src/scenes/MarketScene.tsx`, `src/ui/MarketUI.tsx`,
 - Place street guidance clear of the resource panel. In narrow windows, measure
   the day panel and position guidance beneath it, allowing for text wrapping.
 - Hide the street hint near a citizen and the market hint after first movement.
+- Show a large WASD/arrow-key introduction when each day's street begins. The
+  first movement-key press fades it out over 400 ms. Keep it dismissed for that
+  visit; suppress the smaller hint while the introduction is showing.
 - Correct the opening clouds to move downward. Fade the middle cloud veil back
   out before setup, instead of ending on a bright flash.
 - Cap animation advances after slow frames so the opening does not skip to its

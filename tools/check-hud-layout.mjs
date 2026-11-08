@@ -12,6 +12,9 @@ try {
     useGame.getState().newGame({ title: 'King', model: 'ruler-a', name: '' });
     useGame.getState().closeMorning(); useGame.getState().startEvening();
   });
+  await page.locator('.street-movement-intro.visible').waitFor();
+  await page.keyboard.press('ArrowRight');
+  await page.locator('.street-movement-intro').waitFor({ state: 'detached' });
   await page.locator('.street-walk-hint').waitFor();
   await fs.mkdir('test-results', { recursive: true });
   for (const [width, height] of [[1280, 800], [847, 1347], [390, 844], [844, 390]]) {

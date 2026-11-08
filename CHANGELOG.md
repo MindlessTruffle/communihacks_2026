@@ -99,6 +99,18 @@ the sibling `royal-concerns` folder. The gummy edition began on local branch
 
 ## Where to continue
 
+### Street movement introduction
+
+- Added a large WASD/arrow-key prompt at the beginning of each day's street.
+  The first movement-key press fades it out over 400 ms; unrelated keys do not.
+- The prompt stays dismissed for that street visit, including after stopping or
+  conversations. It returns on the next day. Notebook/menu input does not dismiss it.
+- Suppress the small hint while the large introduction is showing. Touch and
+  controller input retain their existing small guidance.
+- TypeScript and build passed. Added a browser check for initial visibility,
+  movement-key dismissal, fade timing, no reappearance, and next-day/arrow-key use.
+
+
 ### Notebook book graphic and menu integration
 
 - Replaced the floating Misc. tab with a reference-inspired open-book SVG in the
