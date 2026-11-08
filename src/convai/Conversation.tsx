@@ -10,11 +10,21 @@ import { summarySentence } from "../game/content/advisor.ts";
 import { UI } from "../game/content/uiLines.ts";
 import type { Gem, RunState } from "../game/types.ts";
 import { AgentChat, agentsAvailable, type ChatMode } from "./session.ts";
+import { micState, requestMic, reEnableSteps, type MicState } from "./mic.ts";
 import { speak, sfx, stopVoice } from "../audio/audio.ts";
 import { haptic } from "../platform/device.ts";
 import { GEM_LABEL } from "../ui/icons.tsx";
 import { learningMemory, rememberChat, refreshNotebook, runId } from '../game/notebook.ts';
 import { cleanChat } from '../game/learning.ts';
+
+type MicPanel = null | "ask" | "denied" | "insecure" | "unsupported" | "nodevice";
+const PANEL_TEXT: Record<Exclude<MicPanel, null>, { title: string; body: () => string }> = {
+  ask: { title: "To talk out loud, allow the microphone.", body: () => "Your computer will ask you a question. Please choose Allow. We only listen while you are chatting." },
+  denied: { title: "The microphone is turned off.", body: () => `That is okay! You can type instead. To use your voice later: ${reEnableSteps()}` },
+  insecure: { title: "Talking out loud needs a safe web address.", body: () => "This page is not on a secure (https) address, so the browser blocks the microphone. You can type instead." },
+  unsupported: { title: "This browser can't use a microphone here.", body: () => "That is okay! You can type your answers instead." },
+  nodevice: { title: "We can't find a microphone.", body: () => "Plug one in or check your settings. For now, you can type instead." },
+};
 
 const QUICK = ["Hello! How are you?", "That sounds hard. Can I help?", "Thank you for telling me.", "Tell me more!"];
 
@@ -80,6 +90,8 @@ export function Conversation() {
   const [wantsEnd, setWantsEnd] = useState(false);
   const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
   const [draft, setDraft] = useState("");
+  const [micPanel, setMicPanel] = useState<MicPanel>(null);
+  const [micBusy, setMicBusy] = useState(false);
   const [round, setRound] = useState(0);
   const chat = useRef<AgentChat | null>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -135,26 +147,58 @@ export function Conversation() {
         onKindness: award,
         onEmotion: () => {},
         onWantsEnd: () => setWantsEnd(true),
-        onStatus: (s) => { if (alive) setStatus(s); },
+        onStatus: (st) => { if (alive) setStatus(st); },
         onSpeaking: setSpeaking,
       });
       chat.current = c;
-      const started = await c.start(mode);
-      if (!started && mode === "mic") { setMode("text"); await c.start("text"); }
-      else if (!started) { setStatus("scripted"); push("npc", script.opener); speak(convo.npc, script.opener); }
+      // Mic mode only starts straight away when permission was already given; otherwise start typing and explain first.
+      let first: ChatMode = "text";
+      if (mode === "mic") {
+        const st = await micState();
+        if (st === "granted") first = "mic";
+        else { setMode("text"); setMicPanel(st === "prompt" ? "ask" : st); }
+      }
+      if (!alive) return;
+      let started = await c.start(first);
+      if (!alive) return;
+      if (!started && first === "mic") { setMode("text"); setMicPanel(c.lastFailure === "mic" ? "denied" : null); started = await c.start("text"); }
+      if (!alive) return;
+      if (!started) { setStatus("scripted"); setMode("text"); push("npc", script.opener); speak(convo.npc, script.opener); }
     })();
     return () => { alive = false; chat.current?.stop(); stopVoice(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const switchMode = async (m: ChatMode) => {
-    sfx("click");
-    setMode(m);
-    try { localStorage.setItem("rc-mic", m === "mic" ? "1" : "0"); } catch { /* ignore */ }
-    if (chat.current && status !== "scripted") {
-      await chat.current.switchTo(m);
-      if (chat.current.mode !== m) setMode(chat.current.mode);
+  const goMic = async () => {
+    setMode("mic");
+    try { localStorage.setItem("rc-mic", "1"); } catch { /* ignore */ }
+    const c = chat.current;
+    if (c && status !== "scripted") {
+      const got = await c.switchTo("mic");
+      setMode(got);
+      if (got !== "mic") { try { localStorage.setItem("rc-mic", "0"); } catch { /* ignore */ } setMicPanel(c.lastFailure === "mic" ? "denied" : null); }
     }
   };
+  const switchMode = async (m: ChatMode) => {
+    sfx("click");
+    if (m === "mic") {
+      // Never surprise the player with the browser prompt: check the state, explain first, then ask.
+      const st: MicState = await micState();
+      if (st === "granted") return goMic();
+      setMicPanel(st === "prompt" ? "ask" : st);
+      return;
+    }
+    setMode("text");
+    try { localStorage.setItem("rc-mic", "0"); } catch { /* ignore */ }
+    if (chat.current && status !== "scripted") setMode(await chat.current.switchTo("text"));
+  };
+  const allowMic = async () => {
+    setMicBusy(true);
+    const r = await requestMic();
+    setMicBusy(false);
+    if (r === "granted") { setMicPanel(null); await goMic(); }
+    else setMicPanel(r === "denied" ? "denied" : r === "nodevice" ? "nodevice" : "unsupported");
+  };
+  const typeInstead = () => { sfx("click"); setMicPanel(null); setMode("text"); try { localStorage.setItem("rc-mic", "0"); } catch { /* ignore */ } };
   const end = () => {
     flushChat();
     sfx("good"); haptic("medium");
@@ -180,10 +224,14 @@ export function Conversation() {
     });
   };
 
+  // The agent hung up (or time ran out): nothing more to say, so point at Done.
+  useEffect(() => { if (status === "ended") setWantsEnd(true); }, [status]);
+
   // If the live chat drops (no network, token error...), carry on with the scripted chat so the player is never stuck.
   useEffect(() => {
     if (status !== "error") return;
     chat.current?.stop();
+    setMode("text");
     setStatus("scripted");
     setLines((l) => (l.length ? l : [{ who: "npc", text: script.opener, id: ++lid.current }]));
     if (!lines.length) speak(convo.npc, script.opener);
@@ -208,6 +256,19 @@ export function Conversation() {
           </div>
         ))}
       </div>
+      {micPanel && (
+        <div role="alertdialog" aria-labelledby="mic-title" aria-describedby="mic-body" className="mic-panel"
+          style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "min(92vw, 640px)", zIndex: 80, padding: "1.2rem 1.4rem",
+            background: "#fff8e7", color: "#2b1d0e", border: "4px solid #7b4fc9", borderRadius: 18, boxShadow: "0 12px 40px rgba(0,0,0,.45)", textAlign: "center" }}>
+          <div style={{ fontSize: "calc(2.6rem * var(--ts, 1))" }} aria-hidden>🎤</div>
+          <h2 id="mic-title" style={{ fontSize: "calc(1.7rem * var(--ts, 1))", margin: ".3rem 0" }}>{PANEL_TEXT[micPanel].title}</h2>
+          <p id="mic-body" style={{ fontSize: "calc(1.25rem * var(--ts, 1))", lineHeight: 1.4, margin: ".4rem 0 1rem" }}>{PANEL_TEXT[micPanel].body()}</p>
+          <div style={{ display: "flex", gap: ".8rem", justifyContent: "center", flexWrap: "wrap" }}>
+            {micPanel === "ask" && <button data-autofocus className="btn gold" disabled={micBusy} onClick={allowMic}>{micBusy ? "Waiting…" : "🎤 Allow the microphone"}</button>}
+            <button data-autofocus={micPanel !== "ask" ? true : undefined} className={micPanel === "ask" ? "btn ghost" : "btn gold"} onClick={typeInstead}>⌨️ {micPanel === "ask" ? "Type instead" : "Okay, I'll type"}</button>
+          </div>
+        </div>
+      )}
       {pops.map((p) => <div key={p.id} className="kind-pop" style={{ whiteSpace: "pre-line" }}>{p.text}</div>)}
       <div className="cv-replies">
         {(mode === "text" || scripted || status === "error") && !wantsEnd && (
@@ -228,7 +289,7 @@ export function Conversation() {
         <div className="status-pill" role="status">
           {status === "connecting" && "Connecting…"}
           {status === "live" && (mode === "mic" ? (speaking ? `${ch.name} is talking…` : "🎤 Listening — just talk!") : speaking ? `${ch.name} is talking…` : UI.talkPrompt)}
-          {status === "ended" && "Chat ended."}
+          {status === "ended" && "Chat finished. Tap ✓ Done."}
           {scripted && (wantsEnd ? "Tap ✓ to continue" : "Tap an answer")}
         </div>
         <div className="three">

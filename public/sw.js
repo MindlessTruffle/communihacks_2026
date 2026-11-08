@@ -1,6 +1,6 @@
 // Service worker: app shell offline, hashed assets cache-first, data/index files network-first, media on first use.
 // Bump VERSION to drop old caches.
-const VERSION = "v2";
+const VERSION = "v3"; // v3: voices re-baked with eleven_v4 under the same file keys
 const SHELL = "rc-shell-" + VERSION;
 const MEDIA = "rc-media-" + VERSION;
 const SHELL_FILES = ["/", "/index.html", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];

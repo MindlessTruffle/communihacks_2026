@@ -22,6 +22,11 @@ const V = {
   roger: "CwhRBWXzGAHq8TQ4Fs17",
   brian: "nPczCjzI2devNBz1zQrb",
   liam: "TX3LPaxmHKxFdv7VOQHJ",
+  // Added from the shared Voice Library (see handoff-notes/voice.md). Account-local copies, same IDs.
+  sunny: "FgiNpTIapnCbaD6xiqIo", // Sunny - Bubbly, Children Narrator: young, bright, child-like (Little Juno)
+  serena: "mqyRCI8OeJTogXjYUGZ5", // Serena - melodic, dreamy, ethereal: soft airy ghost (Boo)
+  cody: "1RVpBInY9YUYMLSUQReV", // Cody McAvoy - Devoted Knight: calm, pleasant, young (Sir Clank)
+  nana: "xIzR6egd3S3LJZbVW0c1", // Nana Margaret - Little Old Lady: warm elderly (Auntie Rosa)
 };
 export const NARRATOR_VOICE = V.river;
 
@@ -40,13 +45,13 @@ export const CHARACTERS: Record<string, Character> = {
     bio: "A hard-working, upbeat farmer who believes in planting today for tomorrow." },
   benny: { id: "benny", name: "Benny the Bard", model: mc("benny"), color: "#c0681a", voiceId: V.will,
     bio: "A friendly lute player who is always a little short on gold." },
-  rosa: { id: "rosa", name: "Auntie Rosa", model: mc("rosa"), aid: "/models/chars/cane.glb", color: "#c23b6b", voiceId: V.lily,
+  rosa: { id: "rosa", name: "Auntie Rosa", model: mc("rosa"), aid: "/models/chars/cane.glb", color: "#c23b6b", voiceId: V.nana,
     bio: "A caring older woman who walks with a cane. Knows everyone in town and bakes for them." },
-  clank: { id: "clank", name: "Sir Clank", model: mc("clank"), color: "#4d5d8c", voiceId: V.harry,
+  clank: { id: "clank", name: "Sir Clank", model: mc("clank"), color: "#4d5d8c", voiceId: V.cody,
     bio: "A loyal knight with very shiny (and often broken) armour. Keeps promises." },
   wren: { id: "wren", name: "Wren the Builder", model: mc("wren"), color: "#a8741a", voiceId: V.chris,
     bio: "A down-to-earth builder who can build anything once you save up for it." },
-  boo: { id: "boo", name: "Boo", model: mc("boo"), color: "#4a90a8", voiceId: V.jessica,
+  boo: { id: "boo", name: "Boo", model: mc("boo"), color: "#4a90a8", voiceId: V.serena,
     bio: "A tiny friendly castle ghost who wants shiny things. Comic relief." },
   maya: { id: "maya", name: "Maya the Inventor", model: mc("maya"), aid: "/models/chars/wheelchair-power.glb", color: "#1f7a8c", voiceId: V.bella,
     bio: "A brilliant inventor who uses a power wheelchair. Runs the Shield Guild and loves clever plans." },
@@ -62,9 +67,9 @@ export const CHARACTERS: Record<string, Character> = {
     bio: "An excitable visitor from a faraway land with strange coins." },
   brick: { id: "brick", name: "Brick the Smith", model: mc("brick"), color: "#8f3a1f", voiceId: V.brian,
     bio: "A big-hearted blacksmith with a booming voice." },
-  prof: { id: "prof", name: "Professor Quill", model: mc("prof"), color: "#3d6b4f", voiceId: V.eric,
+  prof: { id: "prof", name: "Professor Quill", model: mc("prof"), color: "#3d6b4f", voiceId: V.alice,
     bio: "A teacher who runs the town school." },
-  kid: { id: "kid", name: "Little Juno", model: mc("kid"), color: "#2e8f4f", voiceId: V.jessica, scale: 0.8,
+  kid: { id: "kid", name: "Little Juno", model: mc("kid"), color: "#2e8f4f", voiceId: V.sunny, scale: 0.8,
     bio: "A curious kid from the village who asks big questions." },
 };
 
