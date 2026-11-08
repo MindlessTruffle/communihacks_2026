@@ -12,6 +12,7 @@ import { goNative } from "../platform/device.ts";
 import type { RunState } from "../game/types.ts";
 import { GummyPortrait } from "../characters/gummy/GummyPortrait.tsx";
 import { GummyColors, GUMMY_PALETTE } from './GummyColors.tsx';
+import { useNotebook } from '../game/notebook.ts';
 
 // --- Title screen: ivory serif title over a painted cloud bank + three snowy peaks, ONE START button, quintic camera descent to the court. ---
 let descending = false;
@@ -88,12 +89,11 @@ export function Title() {
         <h1 className="tt-title"><span>Royal</span><span>Concerns</span></h1>
         <div className="tt-actions">
           <button className="tt-start" onClick={start} disabled={going} aria-label="Start"><span>Start</span></button>
-          {hasSave && (
             <div className="tt-secondary">
-              <button className="tt-link" disabled={going} onClick={() => { unlockAudio(); goNative(); sfx("click"); cont(); }}>Continue</button>
+              {hasSave && <button className="tt-link" disabled={going} onClick={() => { unlockAudio(); goNative(); sfx("click"); cont(); }}>Continue</button>}
+              <button className="tt-link tt-notebook" disabled={going} onClick={() => useNotebook.getState().show(true)}><img src="/ui/notebook-book.svg" alt="" draggable={false} /><span>Notebook</span></button>
               <button className="tt-link" disabled={going} onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))}>Options</button>
             </div>
-          )}
         </div>
       </div>
       <div className="tt-veil" aria-hidden="true" />

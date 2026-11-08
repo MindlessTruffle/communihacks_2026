@@ -1,6 +1,8 @@
 # Learning notebook
 
-Open **Misc.** on the side of the game, or **Menu → Misc. · My notebook**.
+Open **Notebook** alongside the title-screen options, use the framed book icon
+below the gear during play, or choose **Menu → Notebook**. The same open-book
+graphic is used in all three locations; the earlier floating Misc. tab is removed.
 The home page shows measured improvements. Each run has Did well, Try next,
 Practice, and Day log pages. Content uses large plain-language text and supports
 read-aloud. Practice questions allow retries without a timer or penalty.

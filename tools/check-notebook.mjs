@@ -17,12 +17,15 @@ async function state() { return page.evaluate(async () => ({ game: (await import
 try {
   await fs.mkdir('test-results', { recursive: true });
   await page.goto('http://127.0.0.1:5206/?q=low', { waitUntil: 'networkidle', timeout: 120000 });
-  await page.getByRole('button', { name: 'Misc. Open my notebook', exact: true }).click();
+  assert.equal(await page.locator('.misc-button, .notebook-button').count(), 0, 'no floating notebook tab on title');
+  assert.ok(await page.locator('.tt-notebook img').evaluate(img => img.complete && img.naturalWidth > 0), 'book graphic loads');
+  await page.screenshot({ path: 'test-results/notebook-main-menu.png', animations: 'disabled' });
+  await page.getByRole('button', { name: 'Notebook', exact: true }).click();
   await page.getByRole('heading', { name: 'My notebook', exact: true }).waitFor();
   await page.getByText('Start a run. Your choices will appear here.', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
-  await page.locator('.title-gear').click();
-  await page.getByRole('button', { name: 'Misc. · My notebook', exact: true }).click();
+  await page.getByRole('button', { name: 'Options', exact: true }).click();
+  await page.locator('.pause').getByRole('button', { name: 'Notebook', exact: true }).click();
   await page.getByRole('heading', { name: 'My notebook', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.evaluate(async () => {
@@ -36,7 +39,7 @@ try {
       useGame.getState().decide(index < 2 ? card.lesson.good === 'yes' ? 'no' : 'yes' : card.lesson.good);
     }
   });
-  await page.getByRole('button', { name: 'Misc. Open my notebook', exact: true }).click();
+  await page.getByRole('button', { name: 'Open notebook', exact: true }).click();
   await page.getByText(/You are improving at/).waitFor();
   const beforeStep = (await state()).game.courtStep;
   await page.keyboard.press('n'); assert.equal((await state()).game.courtStep, beforeStep);
@@ -68,7 +71,7 @@ try {
   assert.equal((await state()).notebook.runs.length, 2);
   assert.equal((await state()).notebook.runs[1].ended, true);
   gemini = true;
-  await page.getByRole('button', { name: 'Misc. Open my notebook', exact: true }).click();
+  await page.getByRole('button', { name: 'Open notebook', exact: true }).click();
   await page.getByRole('button', { name: 'My runs', exact: true }).click();
   const older = (await state()).notebook.runs[1].id;
   await page.getByLabel('Choose a run', { exact: true }).selectOption(older);
@@ -79,12 +82,12 @@ try {
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.evaluate(async () => (await import('/src/game/store.ts')).useGame.getState().openConvo({ npc: 'advisor', agent: 'advisor_evening', mode: 'advisor' }));
   await page.locator('.chip').first().click();
-  await page.getByRole('button', { name: 'Misc. Open my notebook', exact: true }).click();
+  await page.getByRole('button', { name: 'Open notebook', exact: true }).click();
   await page.getByRole('heading', { name: 'My notebook', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'End and continue', exact: true }).click();
   await page.waitForFunction(() => JSON.parse(localStorage.getItem('royal-concerns-notebook-v1'))[0].chats.some(c => c.lines.some(l => l.who === 'me')));
-  await page.getByRole('button', { name: 'Misc. Open my notebook', exact: true }).click();
+  await page.getByRole('button', { name: 'Open notebook', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(400);
   const box = await page.locator('.notebook').boundingBox();

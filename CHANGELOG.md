@@ -99,6 +99,17 @@ the sibling `royal-concerns` folder. The gummy edition began on local branch
 
 ## Where to continue
 
+### Notebook book graphic and menu integration
+
+- Replaced the floating Misc. tab with a reference-inspired open-book SVG in the
+  game's framed corner controls. In play, the book sits below the gear control.
+- Added Notebook to the title's Continue/Options row, with matching typography
+  and the book graphic. Notebook and Options remain visible without a saved run.
+- Added the graphic to the pause menu's Notebook button; removed Misc. wording.
+- Added `CHANGES_SINCE_BRANCH_PULL.md`, a consolidated summary of all changes
+  relative to the original `royal-concerns-game` baseline `161f94b`.
+
+
 ### Opening transition and choice alignment fixes
 
 - Corrected the opening cloud layers to move down. The middle cloud veil now fades

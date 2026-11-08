@@ -1,5 +1,6 @@
-.misc-button { position: absolute; top: 45%; left: 12px; z-index: 45; display: grid; place-items: center; gap: 2px; min-width: 58px; min-height: 64px; border: 2px solid #71513b; border-radius: 12px; background: #fff4d8ec; color: #362611; font: 24px var(--font-display); cursor: pointer; }
-.misc-button span { font: 14px var(--font-body); }
+.notebook-button { left: calc(var(--u) * 1.5 + var(--safe-l)); top: calc(var(--u) * 1.5 + max(56px, var(--u) * 6) + 12px + var(--safe-t)); display: grid; place-items: center; }
+.notebook-button img { width: 84%; height: 84%; object-fit: contain; pointer-events: none; }
+.btn .notebook-menu-icon { width: 32px; height: 32px; object-fit: contain; }
 .notebook-backdrop { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 95; background: #171429b8; }
 .notebook { width: min(860px, 100%); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; overflow: hidden; border: 3px solid #85634b; border-radius: 18px; background: #fff8e9; color: #34291e; box-shadow: 0 12px 60px #0006; font: calc(24px * var(--ts)) / 1.5 var(--font-body); text-align: left; }
 .notebook header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; border-bottom: 2px solid #dccdb4; }

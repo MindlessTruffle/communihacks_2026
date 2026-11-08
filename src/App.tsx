@@ -15,7 +15,7 @@ import { playMusic, preloadSfx, suspendAudio } from "./audio/audio.ts";
 import { Captions, LiveRegion, useApplySettings, useInputMode } from "./platform/a11y.tsx";
 import { haptic, setWalkMode, getDevice } from "./platform/device.ts";
 import { Ico } from "./ui/icons.tsx";
-import { MiscButton, Notebook } from './ui/Notebook.tsx';
+import { NotebookButton, Notebook } from './ui/Notebook.tsx';
 import { rememberRun, useNotebook } from './game/notebook.ts';
 
 // Heavy / rarely-needed pieces are split out: the ElevenLabs SDK only loads when a conversation opens.
@@ -180,9 +180,9 @@ export default function App() {
           {convo && <Conversation />}
           {showHud && <><Stats /><PhaseDots /></>}
           {showGear && <MenuButton onClick={() => setMenu(true)} />}
-          {!inGame && !menu && <button className="corner-btn title-gear" onClick={() => setMenu(true)} aria-label="Options"><Ico name="gear" fallback="⚙️" /></button>}
+          {!inGame && phase !== 'title' && !menu && <button className="corner-btn title-gear" onClick={() => setMenu(true)} aria-label="Options"><Ico name="gear" fallback="⚙️" /></button>}
           <Captions />
-          <MiscButton />
+          {inGame && <NotebookButton />}
           {notebookOpen && <Notebook />}
           {menu && <PauseMenu onClose={closeMenu} />}
           {confirmNew !== null && (

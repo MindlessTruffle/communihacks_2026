@@ -5,8 +5,8 @@ import { improvements, type Practice, type LearningNote } from '../game/learning
 import { speak, stopVoice } from '../audio/audio.ts';
 import './notebook.css';
 
-export function MiscButton() {
-  return <button className="misc-button" aria-label="Misc. Open my notebook" onClick={() => { if (document.pointerLockElement) document.exitPointerLock(); useNotebook.getState().show(true); }}>▤<span>Misc.</span></button>;
+export function NotebookButton() {
+  return <button className="corner-btn notebook-button" aria-label="Open notebook" title="My notebook" onClick={() => { if (document.pointerLockElement) document.exitPointerLock(); useNotebook.getState().show(true); }}><img src="/ui/notebook-book.svg" alt="" draggable={false} /></button>;
 }
 
 function NoteCard({ note }: { note: LearningNote }) {
