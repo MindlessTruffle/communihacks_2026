@@ -77,7 +77,13 @@ function WallExtension({ z }: { z: number }) {
     g.setIndex(idx); g.computeVertexNormals();
     return g;
   }, []);
-  return <mesh geometry={geo} material={brickMat} position={[0, 0, z - 0.02]} receiveShadow />;
+  // Hidden on the title screen and during the cloud descent: from the sky camera this plane reads as a giant brick slab.
+  const ref = useRef<THREE.Mesh>(null!);
+  useFrame(() => {
+    const phase = useGame.getState().phase;
+    if (ref.current) ref.current.visible = phase !== "title" || intro.progress >= 1;
+  });
+  return <mesh ref={ref} geometry={geo} material={brickMat} position={[0, 0, z - 0.02]} receiveShadow />;
 }
 
 export function frameCourt(w: number, h: number) {
