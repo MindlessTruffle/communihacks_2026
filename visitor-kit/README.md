@@ -1,5 +1,12 @@
 # Gummy visitor kit
 
+Character-source handoff for the Royal Concerns gummy branch. This folder includes
+the editable character Blender library, exported GLB, textures, manifest, and
+standalone React demo. The game's runtime copy is
+`../public/models/gummy-visitors.glb`, with integration code in
+`../src/characters/gummy/`. The exported GLB matches the runtime copy byte for byte.
+Only the character library Blender source is included in this handoff.
+
 A modular court-visitor library for Three.js and React Three Fiber. Your original court and character files are unchanged.
 
 ## Open the assets

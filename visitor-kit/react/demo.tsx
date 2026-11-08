@@ -40,5 +40,3 @@ function Demo() {
 }
 const button = { padding: '10px 16px', borderRadius: 8, border: '1px solid #637b90', background: '#29455b', color: '#fff', cursor: 'pointer', minHeight: 44 };
 createRoot(document.getElementById('root')!).render(<Demo />);
-
-

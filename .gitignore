@@ -1,11 +1,21 @@
-node_modules/
-dist/
+node_modules
+dist
 .env
+.env.local
 .env.*
 !.env.example
-*.blend1
 *.blend2
 .DS_Store
-public/assets/cloud-bank.png
-public/fonts/LilitaOne-Regular.ttf
-public/fonts/OFL.txt
+*.log
+_kenney_raw/*.zip
+_kenney_raw/cj.txt
+*.blend1
+
+# screenshots + raw downloads (re-creatable)
+.shots/
+_kenney_raw/
+tools/.codex-*
+test-results/
+
+# portable tools downloaded by scripts
+tools/bin/

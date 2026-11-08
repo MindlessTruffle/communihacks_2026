@@ -67,8 +67,3 @@ export function introCameraPose(end:PerspectiveCamera){
 export const DESCENT_MS=2000;
 export const REDUCED_MS=180;
 export function smoothProgress(t:number){const p=Math.max(0,Math.min(1,t));return p<.5?16*p*p*p*p*p:1-Math.pow(-2*p+2,5)/2;}
-
-
-
-
-

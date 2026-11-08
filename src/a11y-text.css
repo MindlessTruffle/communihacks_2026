@@ -1,0 +1,50 @@
+/* ===== Readable-text floor (accessibility) =====
+   Audience: adults with developmental disabilities, often on phones/tablets or a projector.
+   Nothing the player needs to read may render below --min-text (18px, scaled by the text-size setting).
+   Key-badge letters inside small keycaps get --min-glyph (16px) and the badge grows to fit.
+   This file loads last (main.tsx) and uses !important on purpose: it is a floor that wins over
+   per-bracket / fluid sizes, which can otherwise shrink small labels below readable on short screens. */
+:root {
+  --min-text: calc(18px * var(--ts, 1));
+  --min-glyph: calc(16px * var(--ts, 1));
+}
+
+/* Secondary text in panels, cards, menus, notebook, unlock progress, captions, hints */
+.overlay small, .overlay .small, .overlay .tap-hint, .overlay .hint, .overlay .need, .overlay .lbl,
+.overlay .need-tag, .overlay .choice-price, .overlay .captions, .overlay .captions b,
+.overlay .unlock-track, .overlay .unlock-track small, .overlay .unlock-track span, .overlay .unlock-track strong,
+.overlay .unlock-progress, .overlay .opt-label small, .overlay .toggle-txt, .overlay .crest-gem .small,
+.overlay .street-walk-hint, .overlay .market-walk-hint, .overlay .market-look-prompt,
+.overlay .status-pill, .overlay .list-pin li, .overlay .wallet, .overlay .phase-dots .display,
+.overlay .stat .float, .overlay .item-tile .nm, .overlay .item-tile .pr,
+.overlay .chat-decisions .lbl, .overlay .chat-decisions .need,
+.overlay .custom-color, .overlay .color-brightness, .overlay .gummy-colors legend,
+.overlay label, .overlay .settings-row small,
+.notebook small, .notebook .small, .notebook-small, .notebook-run-label, .notebook-note, .notebook p, .notebook li, .notebook span, .notebook button,
+.bw small, .bw .small, .bw-reward, .bw-reward *,
+.intro small, .intro .skip {
+  font-size: max(var(--min-text), 1em) !important;
+}
+
+/* The yes/no decision labels are the core choice: keep them comfortably large */
+.overlay .thought .choice .lbl, .overlay .thought .choice .need, .overlay .thought .choice-price {
+  font-size: max(var(--min-text), 1em) !important; line-height: 1.15;
+}
+
+/* Keycap / controller glyph badges: letter >= 16px, badge grows to fit */
+.overlay kbd, .overlay .glyph, .overlay .glyph b, .overlay .glyph.text, .overlay .keycap,
+.notebook kbd, .intro kbd {
+  font-size: max(var(--min-glyph), 1em) !important;
+}
+.overlay .glyph, .overlay kbd.glyph { min-width: calc(var(--min-glyph) * 1.6) !important; min-height: calc(var(--min-glyph) * 1.6) !important; }
+.overlay kbd.glyph.keyboard-wide { min-width: calc(var(--min-glyph) * 3.4) !important; padding: 0 .35em !important; }
+
+/* Menus / dialogs always sit above the court decision bubble: hide the bubble while any of them is open */
+body:has(.opts, .pause, .notebook, .notebook-backdrop, .confirm, [role="dialog"][aria-modal="true"]) .overlay .thought { visibility: hidden !important; }
+
+/* With the larger floor, the Options tabs no longer fit one row on short/narrow screens: wrap them */
+.opts-tabs { flex-wrap: wrap !important; row-gap: calc(var(--u) * .6); }
+.opts-tab { flex: 0 1 auto; min-width: 0; }
+
+/* Never clip enlarged labels: let short labels wrap instead of overflowing */
+.overlay .thought .choice .lbl, .overlay .unlock-track > div { overflow-wrap: anywhere; }

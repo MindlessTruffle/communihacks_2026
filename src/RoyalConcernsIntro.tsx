@@ -104,9 +104,3 @@ export function RoyalConcernsIntro({sceneUrl='./assets/royal-court.glb',onArrive
     {showReplay&&phase==='court'&&<button className="replay" onClick={replay}>Replay intro</button>}
   </main>;
 }
-
-
-
-
-
-

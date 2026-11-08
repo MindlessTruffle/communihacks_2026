@@ -1,0 +1,53 @@
+/* Title screen: ivory didone title (Bodoni Moda, OFL) over a painted cloud bank, one cloud-glow START button. */
+.tt-root { position: absolute; inset: 0; overflow: hidden; --cloud-back: 0vh; --cloud-front: 0vh; --fade: 1; --veil: 0; pointer-events: none; }
+.tt-root > * { pointer-events: none; }
+.tt-tint { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(150,196,226,.0) 0%, rgba(150,196,226,.0) 55%, rgba(236,244,250,.18) 100%); }
+.tt-clouds {
+  position: absolute; left: -6%; right: -6%; bottom: 0; height: 60vh;
+  background: url("/ui/cloud-bank.jpg") center bottom / cover no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 30%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 30%);
+  will-change: transform;
+}
+.tt-back { height: 68vh; opacity: .85; transform: translateY(var(--cloud-back)) scaleX(-1); filter: saturate(.9) brightness(1.03); }
+.tt-front { transform: translateY(var(--cloud-front)); }
+.tt-content { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr; justify-items: center; opacity: var(--fade); transition: opacity 160ms ease; }
+.tt-root.reduced.going .tt-content, .tt-root.reduced.going .tt-clouds { transition: opacity 180ms linear; opacity: 0; }
+.tt-title {
+  margin: 0; padding-top: max(3.5vh, 14px); text-align: center; line-height: .94; letter-spacing: .06em; text-transform: uppercase;
+  font-family: "Bodoni Moda", "Didot", "Bodoni 72", "Playfair Display", Georgia, serif; font-weight: 700; color: #fffaf0;
+  text-shadow: 0 .04em .5em rgba(40, 72, 108, .38), 0 .015em .06em rgba(40, 72, 108, .35);
+  display: flex; flex-direction: column; align-items: center;
+}
+.tt-title span { display: block; transform: scaleX(.86); transform-origin: center; }
+.tt-title span:first-child { font-size: clamp(26px, min(6vw, 9vh), 76px); letter-spacing: .34em; margin-right: -.34em; margin-bottom: .1em; }
+.tt-title span:last-child { font-size: clamp(38px, min(10.2vw, 15.5vh), 124px); }
+.tt-actions { align-self: end; margin-bottom: max(9vh, 22px); display: grid; justify-items: center; gap: clamp(8px, 1.6vh, 18px); pointer-events: none; }
+.tt-actions > * { pointer-events: auto; }
+.tt-start {
+  position: relative; min-width: 230px; min-height: 106px; padding: 0 44px; border: 0; cursor: pointer; background: none; border-radius: 999px;
+  font-family: "Bodoni Moda", "Didot", Georgia, serif; font-weight: 700; font-size: clamp(26px, 4.2vh, 40px); letter-spacing: .18em; text-transform: uppercase; color: #2c3a4e;
+  transition: transform 150ms ease, filter 150ms ease;
+  filter: drop-shadow(0 6px 18px rgba(255, 255, 255, .55));
+}
+.tt-start::before { /* diffuse cloud glow */
+  content: ""; position: absolute; inset: -6px -22px; border-radius: 50%; z-index: -1;
+  background: radial-gradient(ellipse at 50% 55%, #fffdf6 0%, #fffaf0 46%, rgba(255, 250, 240, .75) 62%, rgba(255, 250, 240, 0) 76%);
+  filter: blur(3px);
+}
+.tt-start span { position: relative; display: inline-block; transform: scaleX(.9); }
+.tt-start:enabled:hover { transform: translateY(-3px) scale(1.03); filter: drop-shadow(0 10px 24px rgba(255, 255, 255, .8)); }
+.tt-start:enabled:active { transform: translateY(2px) scale(.98); }
+.tt-start:focus-visible, .tt-link:focus-visible { outline: 3px solid #2c3a4e; outline-offset: 6px; }
+.tt-secondary { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: clamp(18px, 4vw, 44px); max-width: 92vw; }
+.tt-notebook { display: inline-flex; align-items: center; gap: 9px; }
+.tt-notebook img { width: 32px; height: 32px; object-fit: contain; pointer-events: none; }
+.tt-link {
+  background: none; border: 0; cursor: pointer; padding: 10px 6px; min-height: 44px;
+  font-family: "Bodoni Moda", Georgia, serif; font-weight: 700; font-size: clamp(15px, 2.6vh, 22px); letter-spacing: .2em; text-transform: uppercase; color: #2c3a4e;
+  text-shadow: 0 0 12px rgba(255, 252, 244, .95), 0 0 4px rgba(255, 252, 244, .9);
+}
+.tt-link:hover:enabled { text-decoration: underline; text-underline-offset: 6px; }
+.tt-veil { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 60%, rgba(250, 252, 255, .95), rgba(236, 244, 250, .85)); opacity: var(--veil); }
+@media (max-height: 480px) { .tt-start { min-height: 84px; min-width: 200px; } .tt-actions { margin-bottom: 4vh; } }
+@media (prefers-reduced-motion: reduce) { .tt-start, .tt-content { transition: none; } }

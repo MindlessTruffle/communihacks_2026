@@ -65,4 +65,3 @@ export function assembleCharacter(library: Object3D, input: AppearanceInput, ini
     }
   };
 }
-

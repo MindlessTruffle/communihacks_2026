@@ -11,4 +11,3 @@ Apple Human Interface Guidelines informed the interaction foundations, adapted f
 - Accessibility: Start is a native button, loading and failure have text feedback, and focus moves to the arrival heading.
 
 References: https://developer.apple.com/design/human-interface-guidelines/buttons • https://developer.apple.com/design/human-interface-guidelines/motion • https://developer.apple.com/design/human-interface-guidelines/typography • https://developer.apple.com/design/human-interface-guidelines/designing-for-games • https://developer.apple.com/design/human-interface-guidelines/accessibility
-

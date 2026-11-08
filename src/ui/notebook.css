@@ -1,0 +1,25 @@
+.notebook-button { left: calc(var(--u) * 1.5 + var(--safe-l)); top: calc(var(--u) * 1.5 + max(56px, var(--u) * 6) + 12px + var(--safe-t)); display: grid; place-items: center; }
+.notebook-button img { width: 84%; height: 84%; object-fit: contain; pointer-events: none; }
+.btn .notebook-menu-icon { width: 32px; height: 32px; object-fit: contain; }
+.notebook-backdrop { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 95; background: #171429b8; }
+.notebook { width: min(860px, 100%); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; overflow: hidden; border: 3px solid #85634b; border-radius: 18px; background: #fff8e9; color: #34291e; box-shadow: 0 12px 60px #0006; font: calc(24px * var(--ts)) / 1.5 var(--font-body); text-align: left; }
+.notebook header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; border-bottom: 2px solid #dccdb4; }
+.notebook h1 { font: 32px var(--font-display); margin: 0; }
+.notebook h2 { font: calc(28px * var(--ts)) / 1.25 var(--font-display); margin: 16px 0; }
+.notebook h3 { font: inherit; font-weight: 700; margin: 0 0 12px; }
+.notebook p { margin: 10px 0 16px; }
+.notebook nav { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 24px; }
+.notebook button { font: inherit; font-size: max(20px, 1em); min-height: 52px; padding: 10px 18px; border: 2px solid #ad9478; border-radius: 12px; color: inherit; background: #fffdf5; cursor: pointer; }
+.notebook button:focus-visible { outline: 4px solid #286da8; outline-offset: 2px; }
+.notebook button[aria-pressed="true"], .notebook .notebook-primary { border-color: #356e52; background: #d9eddd; }
+.notebook button:disabled { cursor: wait; opacity: .65; }
+.notebook main { min-height: 0; overflow: auto; padding: 0 24px 24px; }
+.notebook footer { flex-shrink: 0; padding: 12px 24px; background: #eee2ca; font-size: 18px; }
+.notebook-note, .notebook-question { margin: 16px 0; padding: 18px; background: #f3ecd9; border-left: 6px solid #6c987c; border-radius: 10px; }
+.notebook-note strong { display: block; }
+.notebook-note button { margin-top: 16px; }
+.notebook-question > div { display: grid; gap: 12px; }
+.notebook .notebook-small { font-size: max(18px, .8em); color: #5b5145; }
+.notebook-run-label { display: grid; gap: 8px; }
+.notebook select { padding: 12px; border: 2px solid #ad9478; border-radius: 10px; background: white; color: inherit; font: inherit; max-width: 100%; }
+@media (max-width: 600px) { .notebook { font-size: calc(21px * var(--ts)); } .notebook header, .notebook nav { padding: 12px; } .notebook main { padding: 0 12px 16px; } .notebook h1 { font-size: 27px; } .notebook button { padding: 8px 12px; } }

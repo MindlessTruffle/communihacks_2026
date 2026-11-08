@@ -1,30 +1,38 @@
 # Royal Concerns
 
-A mobile-friendly court scene and opening menu built with React, Three.js, and React Three Fiber.
+A fantasy-kingdom game that helps young adults practise real-life money skills:
+court decisions, budgeting, shopping, saving, and learning from each run.
 
-## Run
+## Run the game
 
-Use Node.js 22.12+:
+On Windows, run `start-gummy.cmd` and open the Local URL printed in the terminal.
+It starts at port 5202 and picks the next free port if needed. Add `/?q=low` for
+lower graphics settings.
+
+For a standard development setup, use Node 24:
 
 ```sh
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-Use `npm run build` to produce the application, then `npm run preview` to view that build over HTTP.
+`pnpm test` runs the learning/notebook tests. `pnpm build` checks TypeScript and
+builds the game. `pnpm preview` serves a preview; `pnpm serve` runs the production
+server after a build.
 
-## Project contents
+Copy `.env.example` to ignored `.env.local` to configure ElevenLabs voices and
+Gemini notebook interpretation through OpenRouter. Keep real keys server-side.
+Scripted conversations and saved notebook notes work without these services.
 
-- `src/`: responsive opening menu, camera framing, instanced scene assembly, cloud transitions.
-- `public/assets/royal-court.glb`: latest court with grounded coin pile, camera-facing coins, 60 grounded spill coins, five limestone steps, and plum/gold stair runner.
-- `assets/blender/royal-court.blend`: editable source of that exported court, with packed textures.
-- `visitor-kit/`: separate modular gummy visitor library, GLB, texture atlas, manifest, seeded assembler, and interactive demo. Run it independently using its README.
-- `docs/`: setup, design notes, validation, and integration handoff.
+## Game and assets
 
-The opening uses Perandory lettering, soft cloud imagery, and a view of three snowy peaks. Start triggers a two-second quintic ease-in/ease-out descent. Arrival displays Hilltop Courtroom / Day 1. Reduced motion uses a short crossfade; Escape skips the descent.
+- `src/`: playable court, street, market, customisable characters, and notebook.
+- `public/models/gummy-visitors.glb`: shared runtime gummy library.
+- `visitor-kit/`: editable character Blender source, textures, and standalone demo.
+- `server/`: voice and notebook API endpoints.
+- `CHANGES_SINCE_BRANCH_PULL.md`: consolidated feature history.
+- `CHANGELOG.md` and `handoff-notes/`: development notes and integration details.
 
-The current scene includes static ruler/visitor figures. Court gameplay and the modular visitor assembler have not yet been connected. See `docs/HANDOFF.md` before integration.
-
-## Asset notices
-
-Perandory Semi-Condensed is included from the personal-use download at https://font.download/font/perandory . Confirm the appropriate web/app and redistribution license with Kulture Type before distributing the game. The cloud image is an original generated asset. Textures embedded in the scene and the visitor atlas are included alongside their editable Blender sources.
+The original intro prototype's files and assets are preserved alongside the game.
+Its former README and asset notices are in `docs/legacy-intro-readme.md`.
+The current app entry point is `src/main.tsx` to `src/App.tsx`.
