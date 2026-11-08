@@ -1,0 +1,45 @@
+{
+  "name": "royal-concerns",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc -p . && vite build",
+    "preview": "vite preview --host",
+    "serve": "node server/serve.mjs",
+    "test": "vitest run",
+    "assets:kenney": "node tools/copy-kenney.mjs",
+    "voices:bake": "node tools/bake-voices.ts",
+    "agents:sync": "node tools/sync-agents.ts",
+    "sim": "node tools/economy-sim.ts",
+    "music:gen": "node tools/gen-music.ts"
+  },
+  "dependencies": {
+    "@elevenlabs/client": "^1.35.0",
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/bodoni-moda": "^5.3.0",
+    "@fontsource/lilita-one": "^5.3.0",
+    "@fontsource/opendyslexic": "^5.3.0",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
+    "@react-three/postprocessing": "^3.2.2",
+    "howler": "^2.2.4",
+    "postprocessing": "^6.39.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "three": "^0.187.0",
+    "zustand": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/howler": "^2.2.13",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.187.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

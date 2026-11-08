@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "Royal Concerns",
+  "short_name": "Royal Concerns",
+  "description": "Rule a tiny kingdom, make smart money choices, and be kind to your people.",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "en-CA",
+  "dir": "ltr",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#2b1d14",
+  "theme_color": "#2b1d14",
+  "categories": ["games", "education"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+.env.local
+*.log
+_kenney_raw/*.zip
+_kenney_raw/cj.txt
+*.blend1
+
+# screenshots + raw downloads (re-creatable)
+.shots/
+_kenney_raw/
+tools/.codex-*
