@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1920px; height: 1080px; background: #ffffff; font-family: "Segoe UI", "Inter", Arial, sans-serif; color: #241c14; position: relative; overflow: hidden; }
+  .box { position: absolute; border-radius: 20px; padding: 26px 30px; border: 3px solid; }
+  .box b { display: flex; align-items: center; gap: 14px; font-size: 40px; line-height: 1.1; margin-bottom: 14px; }
+  .box p { font-size: 30px; line-height: 1.32; }
+  .num { flex: none; width: 46px; height: 46px; border-radius: 50%; color: #fff; font-size: 26px; display: grid; place-items: center; }
+  .c { background: #f1eefe; border-color: #6d5bd0; } .c .num { background: #6d5bd0; }
+  .s { background: #e6f6ef; border-color: #1d9e75; } .s .num { background: #1d9e75; }
+  .e { background: #fdeee8; border-color: #d85a30; } .e .num { background: #d85a30; }
+  .n { background: #fdf4df; border-color: #ba7517; } .n .num { background: #ba7517; }
+  svg { position: absolute; left: 0; top: 0; pointer-events: none; }
+</style></head>
+<body>
+<div class="box c" id="mic" style="left:50px; top:50px; width:560px; height:250px">
+  <b><span class="num">1</span>Mic permission</b>
+  <p>Friendly prompt first. If blocked, the player types instead.</p>
+</div>
+<div class="box s" id="tok" style="left:680px; top:50px; width:560px; height:250px">
+  <b><span class="num">2</span>Secure token</b>
+  <p>Our server keeps the ElevenLabs key and issues a short-lived pass.</p>
+</div>
+<div class="box e" id="cred" style="left:1310px; top:50px; width:560px; height:250px">
+  <b><span class="num">3</span>Session opens</b>
+  <p>Voice over WebRTC, or text over WebSocket.</p>
+</div>
+
+<div class="box c" id="sess" style="left:50px; top:370px; width:560px; height:290px">
+  <b><span class="num">4</span>Live chat</b>
+  <p>Player talks or types. The game shares today's progress with the character.</p>
+</div>
+<div class="box e" id="agent" style="left:1310px; top:370px; width:560px; height:660px">
+  <b><span class="num">5</span>Character agent</b>
+  <p><strong>Scribe</strong> listens<br>↓<br><strong>Claude Haiku 5.5</strong> thinks in character<br>↓<br><strong>Eleven v4</strong> speaks with expression<br><br>Every character has their own voice and personality.</p>
+</div>
+<div class="box s" id="tts" style="left:680px; top:540px; width:560px; height:170px">
+  <b style="margin-bottom:8px">Typed replies voiced</b>
+  <p>Eleven v4 Turbo, same character voice</p>
+</div>
+
+<div class="box c" id="react" style="left:50px; top:740px; width:560px; height:290px">
+  <b><span class="num">6</span>Game reacts</b>
+  <p>The character can award kindness gems, show emotions and end the chat.</p>
+</div>
+<div class="box n" id="nb" style="left:680px; top:780px; width:560px; height:250px">
+  <b><span class="num">7</span>Notebook memory</b>
+  <p>Gemini summarises the chat so the next one remembers.</p>
+</div>
+
+<svg width="1920" height="1080" id="arrows">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#3d3127"/></marker></defs>
+</svg>
+<script>
+  const svg = document.getElementById('arrows');
+  const R = (id) => document.getElementById(id).getBoundingClientRect();
+  const path = (d, dash) => { const l = document.createElementNS('http://www.w3.org/2000/svg', 'path'); l.setAttribute('d', d);
+    l.setAttribute('stroke', '#3d3127'); l.setAttribute('stroke-width', '5'); l.setAttribute('fill', 'none'); l.setAttribute('stroke-linejoin', 'round');
+    if (dash) l.setAttribute('stroke-dasharray', '14 10'); l.setAttribute('marker-end', 'url(#a)'); svg.appendChild(l); return l; };
+  const m = R('mic'), t = R('tok'), c = R('cred'), s = R('sess'), ag = R('agent'), tt = R('tts'), r = R('react'), nb = R('nb');
+  const mid = (b) => b.top + b.height / 2;
+  path(`M${m.right + 6} ${mid(m)} L${t.left - 10} ${mid(m)}`);
+  path(`M${t.right + 6} ${mid(t)} L${c.left - 10} ${mid(t)}`);
+  path(`M${m.left + m.width / 2} ${m.bottom + 6} L${s.left + s.width / 2} ${s.top - 10}`);
+  path(`M${c.left + c.width / 2} ${c.bottom + 6} L${ag.left + ag.width / 2} ${ag.top - 10}`);
+  path(`M${s.right + 6} ${s.top + 55} L${ag.left - 10} ${s.top + 55}`);
+  path(`M${ag.left - 6} ${s.top + 120} L${s.right + 10} ${s.top + 120}`);
+  path(`M${s.right + 6} ${s.bottom - 50} L${tt.left - 10} ${s.bottom - 50}`);
+  path(`M${ag.left - 6} ${tt.bottom + 34} L${r.right + 10} ${tt.bottom + 34}`);
+  path(`M${r.right + 6} ${mid(nb) + 50} L${nb.left - 10} ${mid(nb) + 50}`);
+  path(`M${nb.left - 6} ${nb.top + 45} L645 ${nb.top + 45} L645 ${s.bottom - 110} L${s.right + 10} ${s.bottom - 110}`, true);
+</script>
+</body></html>
